@@ -1,0 +1,1 @@
+"""Entidades e regras do dominio."""

@@ -1,0 +1,1 @@
+"""Pacote raiz do sistema de agendamento de almocos."""
