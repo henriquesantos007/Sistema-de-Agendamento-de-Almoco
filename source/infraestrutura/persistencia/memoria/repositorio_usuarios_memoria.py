@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional
 
 from source.dominio.usuarios.repositorio_usuarios import RepositorioUsuarios
@@ -38,9 +39,9 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
         )
 
     def existe_telefone(self, telefone: str) -> bool:
-        telefone_normalizado = telefone.strip()
+        telefone_normalizado = re.sub(r"\D", "", telefone)
         return any(
             isinstance(usuario, Estudante)
-            and usuario.telefone.strip() == telefone_normalizado
+            and re.sub(r"\D", "", usuario.telefone) == telefone_normalizado
             for usuario in self._usuarios
         )
