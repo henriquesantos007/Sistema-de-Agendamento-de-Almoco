@@ -10,6 +10,10 @@ class RepositorioUsuarios(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def listar_todos(self) -> List[Usuario]:
+        raise NotImplementedError
+
+    @abstractmethod
     def buscar_por_email(self, email: str) -> Optional[Usuario]:
         raise NotImplementedError
 

@@ -47,3 +47,6 @@ class ControladorUsuario:
 
         return self.repositorio.adicionar(usuario)
 
+    def listar_usuarios(self) -> List[Usuario]:
+        return self.repositorio.listar_todos()
+
