@@ -15,6 +15,9 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
         self._usuarios.append(usuario)
         return usuario
 
+    def listar_todos(self) -> List[Usuario]:
+        return list(self._usuarios)
+
     def buscar_por_email(self, email: str) -> Optional[Usuario]:
         email_normalizado = email.strip().casefold()
         return next(
