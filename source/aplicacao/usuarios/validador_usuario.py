@@ -11,6 +11,10 @@ class DadosUsuarioInvalidos(ValueError):
         super().__init__("; ".join(erros))
 
 
+def normalizar_telefone(telefone: str) -> str:
+    return re.sub(r"\D", "", telefone)
+
+
 class ValidadorUsuario:
     PERFIS_VALIDOS = {"estudante", "gestor_restaurante", "administrador"}
     FORMATO_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -34,9 +38,10 @@ class ValidadorUsuario:
         if perfil not in self.PERFIS_VALIDOS:
             erros.append("perfil invalido")
 
-        if dados.email and not self.FORMATO_EMAIL.match(dados.email.strip()):
+        email = (dados.email or "").strip()
+        if email and not self.FORMATO_EMAIL.match(email):
             erros.append("e-mail invalido")
-        elif dados.email and self.repositorio.buscar_por_email(dados.email):
+        elif email and self.repositorio.buscar_por_email(email):
             erros.append("e-mail ja cadastrado")
 
         if perfil == "estudante":
@@ -45,7 +50,8 @@ class ValidadorUsuario:
             elif self.repositorio.existe_matricula(dados.matricula):
                 erros.append("matricula ja cadastrada")
 
-            if dados.telefone and self.repositorio.existe_telefone(dados.telefone):
+            telefone = normalizar_telefone(dados.telefone or "")
+            if telefone and self.repositorio.existe_telefone(telefone):
                 erros.append("telefone ja cadastrado para estudante")
 
         if perfil == "gestor_restaurante" and dados.restaurante_id is None:
