@@ -21,3 +21,12 @@ class LoginInvalido(ErroValidacaoCampo):
 
 class SenhaInvalida(ErroValidacaoCampo):
     campo = "senha"
+
+
+class ErroPersistencia(Exception):
+    """Falha ao ler ou gravar usuarios em um mecanismo de persistencia.
+
+    Encapsula excecoes tecnicas (IOError, sqlite3.Error, etc.) para que as
+    camadas superiores nao dependam de detalhes de infraestrutura. A causa
+    original fica disponivel em __cause__.
+    """

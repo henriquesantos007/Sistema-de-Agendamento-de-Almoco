@@ -1,9 +1,10 @@
+import argparse
+
 from source.aplicacao.usuarios import (
     ControladorUsuario,
     DadosUsuario,
     DadosUsuarioInvalidos,
 )
-from source.infraestrutura.persistencia.memoria import RepositorioUsuariosMemoria
 from source.aplicacao.usuarios.validador_usuario import (
     ValidadorUsuario,
     ValidadorDadosObrigatorios,
@@ -14,8 +15,52 @@ from source.aplicacao.usuarios.validador_usuario import (
     ValidadorEstudante,
     ValidadorGestorRestaurante,
 )
+from source.dominio.usuarios import ErroPersistencia
+from source.infraestrutura.persistencia.fabrica_repositorio import (
+    ARMAZENAMENTOS,
+    criar_repositorio_usuarios
+)
+
+
+def ler_argumentos():
+    parser = argparse.ArgumentParser(description="Cadastro de usuarios")
+    parser.add_argument(
+        "--armazenamento",
+        choices=ARMAZENAMENTOS,
+        default="memoria",
+        help="mecanismo de persistencia (padrao: memoria)",
+    )
+    parser.add_argument(
+        "--caminho",
+        default=None,
+        help="arquivo do armazenamento (padrao: dados/usuarios.bin)",
+    )
+    return parser.parse_args()
+
+
+def tentar_cadastrar(controlador, dados):
+    try:
+        usuario = controlador.cadastrar(dados)
+        print(f"Cadastrado: {usuario.perfil} '{usuario.login}' (id={usuario.id})")
+    except DadosUsuarioInvalidos as erro:
+        print(f"Cadastro de '{dados.login}' recusado:")
+        for mensagem in erro.erros:
+            print(f"  - {mensagem}")
+    except ErroPersistencia as erro:
+        print(f"Falha de persistencia ao cadastrar '{dados.login}': {erro}")
+
 
 def main():
+    argumentos = ler_argumentos()
+
+    try:
+        repositorio = criar_repositorio_usuarios(
+            argumentos.armazenamento, argumentos.caminho
+        )
+    except ErroPersistencia as erro:
+        print(f"Nao foi possivel iniciar o armazenamento: {erro}")
+        return
+
     validador = ValidadorUsuario([
         ValidadorDadosObrigatorios(),
         ValidadorPerfil(),
@@ -26,11 +71,11 @@ def main():
         ValidadorGestorRestaurante(),
     ])
 
-    repositorio = RepositorioUsuariosMemoria()
-
     controlador = ControladorUsuario(repositorio, validador)
 
-    dados_usuario = DadosUsuario(
+    print(f"Armazenamento: {argumentos.armazenamento}")
+
+    tentar_cadastrar(controlador, DadosUsuario(
         perfil="estudante",
         nome="Ana Silva",
         login="anasilva",
@@ -38,14 +83,10 @@ def main():
         senha="Senha@2026",
         telefone="83999990000",
         matricula="2026001",
-    )
-
-    usuario = controlador.cadastrar(dados_usuario)
-    print(usuario)
-    print(repositorio.listar_todos())
+    ))
 
     # Exemplo de tratamento de erros: login e senha fora das regras
-    dados_invalidos = DadosUsuario(
+    tentar_cadastrar(controlador, DadosUsuario(
         perfil="estudante",
         nome="Bruno Lima",
         login="bruno123456789",
@@ -53,14 +94,17 @@ def main():
         senha="curta",
         telefone="83988880000",
         matricula="2026002",
-    )
+    ))
 
     try:
-        controlador.cadastrar(dados_invalidos)
-    except DadosUsuarioInvalidos as erro:
-        print("Cadastro recusado:")
-        for mensagem in erro.erros:
-            print(f"  - {mensagem}")
+        usuarios = repositorio.listar_todos()
+    except ErroPersistencia as erro:
+        print(f"Falha de persistencia ao listar usuarios: {erro}")
+        return
+
+    print("Usuarios armazenados:")
+    for usuario in usuarios:
+        print(f"  [{usuario.id}] {usuario.perfil} | {usuario.login} | {usuario.email}")
 
 
 if __name__ == "__main__":
