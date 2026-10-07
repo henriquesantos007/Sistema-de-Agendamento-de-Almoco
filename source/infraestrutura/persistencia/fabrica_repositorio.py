@@ -5,7 +5,7 @@ from source.dominio.usuarios.repositorio_usuarios import RepositorioUsuarios
 from source.infraestrutura.persistencia.arquivo import RepositorioUsuariosArquivo
 from source.infraestrutura.persistencia.memoria import RepositorioUsuariosMemoria
 
-ARMAZENAMENTOS = ("memoria", "arquivo", "sqlite")
+ARMAZENAMENTOS = ("memoria", "arquivo")
 
 _CAMINHOS_PADRAO = {
     "arquivo": "dados/usuarios.bin"
