@@ -1,9 +1,27 @@
 from source.aplicacao.usuarios import ControladorUsuario, DadosUsuario
 from source.infraestrutura.persistencia.memoria import RepositorioUsuariosMemoria
-
+from source.aplicacao.usuarios.validador_usuario import (
+    ValidadorUsuario,
+    ValidadorDadosObrigatorios,
+    ValidadorPerfil,
+    ValidadorEmail,
+    ValidadorEstudante,
+    ValidadorGestorRestaurante,
+)
 
 def main():
-    controlador = ControladorUsuario(RepositorioUsuariosMemoria())
+    validador = ValidadorUsuario([
+    ValidadorDadosObrigatorios(),
+    ValidadorPerfil(),
+    ValidadorEmail(),
+    ValidadorEstudante(),
+    ValidadorGestorRestaurante(),
+    ])
+
+    repositorio = RepositorioUsuariosMemoria()
+
+    controlador = ControladorUsuario(repositorio, validador)
+
     dados_usuario = DadosUsuario(
         "estudante",
         "Ana Silva",
@@ -12,13 +30,10 @@ def main():
         "83999990000",
         "2026001",
     )
-    controlador.cadastrar_usuario(dados_usuario)
-    print(
-        [
-            (usuario.id, usuario.perfil, usuario.email, usuario.status.value)
-            for usuario in controlador.listar_usuarios()
-        ]
-    )
+
+    usuario = controlador.cadastrar(dados_usuario)
+    print(usuario)
+    print(repositorio.listar_todos())
 
 
 if __name__ == "__main__":

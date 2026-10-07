@@ -3,10 +3,8 @@ from typing import List, Optional
 from source.aplicacao.usuarios.dados_usuario import DadosUsuario
 from source.aplicacao.usuarios.validador_usuario import (
     DadosUsuarioInvalidos,
-    ValidadorUsuario,
     normalizar_telefone,
 )
-from source.dominio.usuarios.repositorio_usuarios import RepositorioUsuarios
 from source.dominio.usuarios.senha import gerar_hash_senha
 from source.dominio.usuarios.usuario import (
     Administrador,
@@ -21,51 +19,49 @@ class PermissaoNegada(PermissionError):
 
 
 class ControladorUsuario:
-    # Perfis que só um administrador autenticado pode cadastrar.
-    PERFIS_RESTRITOS = {"gestor_restaurante", "administrador"}
-
-    def __init__(
-        self,
-        repositorio: RepositorioUsuarios,
-        validador: Optional[ValidadorUsuario] = None,
-    ) -> None:
+    def __init__(self, repositorio, validador_usuario):
         self.repositorio = repositorio
-        self.validador = validador or ValidadorUsuario(repositorio)
+        self.validador_usuario = validador_usuario
 
-    def cadastrar_usuario(
-        self, dados: DadosUsuario, solicitante: Optional[Usuario] = None
-    ) -> Usuario:
-        perfil = dados.perfil.strip().lower()
-        if perfil in self.PERFIS_RESTRITOS and not isinstance(
-            solicitante, Administrador
-        ):
-            raise PermissaoNegada(
-                f"apenas administradores podem cadastrar o perfil {perfil}"
-            )
+    def cadastrar(self, dados):
+        erros = self.validador_usuario.validar(dados, self.repositorio)
 
-        erros = self.validador.validar(dados)
         if erros:
             raise DadosUsuarioInvalidos(erros)
 
-        campos = {
-            "nome": dados.nome.strip(),
-            "email": dados.email.strip().lower(),
-            "senha": gerar_hash_senha(dados.senha),
-            "telefone": normalizar_telefone(dados.telefone),
-        }
+        usuario = self._criar_usuario(dados)
+        self.repositorio.adicionar(usuario)
+        return usuario
+    def _criar_usuario(self, dados: DadosUsuario) -> Usuario:
+        perfil = (dados.perfil or "").strip().lower()
+
+        senha_hash = gerar_hash_senha(dados.senha)
+        telefone_normalizado = normalizar_telefone(dados.telefone)
 
         if perfil == "estudante":
-            usuario = Estudante(**campos, matricula=dados.matricula.strip())
-        elif perfil == "gestor_restaurante":
-            usuario = GestorRestaurante(
-                **campos, restaurante_id=dados.restaurante_id
+            return Estudante(
+                nome=dados.nome,
+                email=dados.email,
+                senha=senha_hash,
+                telefone=telefone_normalizado,
+                matricula=dados.matricula or "",
             )
-        elif perfil == "administrador":
-            usuario = Administrador(**campos)
-        else:
-            raise DadosUsuarioInvalidos(["perfil invalido"])
 
-        return self.repositorio.adicionar(usuario)
+        if perfil == "gestor_restaurante":
+            return GestorRestaurante(
+                nome=dados.nome,
+                email=dados.email,
+                senha=senha_hash,
+                telefone=telefone_normalizado,
+                restaurante_id=dados.restaurante_id,
+            )
 
-    def listar_usuarios(self) -> List[Usuario]:
-        return self.repositorio.listar_todos()
+        if perfil == "administrador":
+            return Administrador(
+                nome=dados.nome,
+                email=dados.email,
+                senha=senha_hash,
+                telefone=telefone_normalizado,
+            )
+
+        raise ValueError("perfil invalido")
