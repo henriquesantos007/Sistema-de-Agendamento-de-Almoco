@@ -3,6 +3,11 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from source.aplicacao.usuarios.dados_usuario import DadosUsuario
+from source.dominio.usuarios.excecoes import LoginInvalido, SenhaInvalida
+from source.dominio.usuarios.politica_credenciais import (
+    validar_login,
+    validar_senha,
+)
 from source.dominio.usuarios.repositorio_usuarios import RepositorioUsuarios
 
 
@@ -94,6 +99,27 @@ class ValidadorGestorRestaurante(ValidadorUsuarioBase):
             erros.append("restaurante e obrigatorio para gestor")
 
         return erros
+
+class ValidadorLogin(ValidadorUsuarioBase):
+    def validar(self, dados, repositorio) -> List[str]:
+        try:
+            validar_login(dados.login)
+        except LoginInvalido as erro:
+            return list(erro.motivos)
+        return []
+
+class ValidadorSenha(ValidadorUsuarioBase):
+    def validar(self, dados, repositorio) -> List[str]:
+        senha = dados.senha
+        # Senha vazia ja e reportada por ValidadorDadosObrigatorios.
+        if not senha or not senha.strip():
+            return []
+
+        try:
+            validar_senha(senha, login=dados.login, email=dados.email)
+        except SenhaInvalida as erro:
+            return list(erro.motivos)
+        return []
 
 class ValidadorUsuario:
     def __init__(self, validadores):

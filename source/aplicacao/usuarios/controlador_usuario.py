@@ -32,15 +32,18 @@ class ControladorUsuario:
         usuario = self._criar_usuario(dados)
         self.repositorio.adicionar(usuario)
         return usuario
+
     def _criar_usuario(self, dados: DadosUsuario) -> Usuario:
         perfil = (dados.perfil or "").strip().lower()
 
+        login = (dados.login or "").strip()
         senha_hash = gerar_hash_senha(dados.senha)
         telefone_normalizado = normalizar_telefone(dados.telefone)
 
         if perfil == "estudante":
             return Estudante(
                 nome=dados.nome,
+                login=login,
                 email=dados.email,
                 senha=senha_hash,
                 telefone=telefone_normalizado,
@@ -50,6 +53,7 @@ class ControladorUsuario:
         if perfil == "gestor_restaurante":
             return GestorRestaurante(
                 nome=dados.nome,
+                login=login,
                 email=dados.email,
                 senha=senha_hash,
                 telefone=telefone_normalizado,
@@ -59,6 +63,7 @@ class ControladorUsuario:
         if perfil == "administrador":
             return Administrador(
                 nome=dados.nome,
+                login=login,
                 email=dados.email,
                 senha=senha_hash,
                 telefone=telefone_normalizado,
