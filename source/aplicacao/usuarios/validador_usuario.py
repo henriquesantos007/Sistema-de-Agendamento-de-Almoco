@@ -2,19 +2,11 @@ import re
 from abc import ABC, abstractmethod
 from typing import List
 
-from source.aplicacao.usuarios.dados_usuario import DadosUsuario
 from source.dominio.usuarios.excecoes import LoginInvalido, SenhaInvalida
 from source.dominio.usuarios.politica_credenciais import (
     validar_login,
     validar_senha,
 )
-from source.dominio.usuarios.repositorio_usuarios import RepositorioUsuarios
-
-
-class DadosUsuarioInvalidos(ValueError):
-    def __init__(self, erros: List[str]) -> None:
-        self.erros = erros
-        super().__init__("; ".join(erros))
 
 
 def normalizar_telefone(telefone: str) -> str:
