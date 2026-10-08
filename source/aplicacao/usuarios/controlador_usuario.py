@@ -14,10 +14,6 @@ from source.dominio.usuarios.usuario import (
 )
 
 
-class PermissaoNegada(PermissionError):
-    pass
-
-
 class ControladorUsuario:
     def __init__(self, repositorio, validador_usuario):
         self.repositorio = repositorio
