@@ -1,10 +1,8 @@
 from typing import List, Optional
 
 from source.aplicacao.usuarios.dados_usuario import DadosUsuario
-from source.aplicacao.usuarios.validador_usuario import (
-    DadosUsuarioInvalidos,
-    normalizar_telefone,
-)
+from source.aplicacao.usuarios.excecoes import DadosUsuarioInvalidos
+from source.aplicacao.usuarios.validador_usuario import normalizar_telefone
 from source.dominio.usuarios.senha import gerar_hash_senha
 from source.dominio.usuarios.usuario import (
     Administrador,
