@@ -6,6 +6,7 @@ from typing import Optional
 class DadosUsuario:
     perfil: str
     nome: str
+    login: str
     email: str
     senha: str
     telefone: str

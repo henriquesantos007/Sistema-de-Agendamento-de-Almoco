@@ -14,6 +14,7 @@ class Usuario(ABC):
     def __init__(
         self,
         nome: str,
+        login: str,
         email: str,
         senha: str,
         telefone: str,
@@ -23,6 +24,7 @@ class Usuario(ABC):
     ) -> None:
         self.id = id
         self.nome = nome
+        self.login = login
         self.email = email
         self.senha = senha
         self.telefone = telefone
@@ -39,6 +41,7 @@ class Estudante(Usuario):
     def __init__(
         self,
         nome: str,
+        login: str,
         email: str,
         senha: str,
         telefone: str,
@@ -47,7 +50,9 @@ class Estudante(Usuario):
         data_cadastro: Optional[datetime] = None,
         status: StatusUsuario = StatusUsuario.ATIVO,
     ) -> None:
-        super().__init__(nome, email, senha, telefone, id, data_cadastro, status)
+        super().__init__(
+            nome, login, email, senha, telefone, id, data_cadastro, status
+        )
         self.matricula = matricula
 
     @property
@@ -59,6 +64,7 @@ class GestorRestaurante(Usuario):
     def __init__(
         self,
         nome: str,
+        login: str,
         email: str,
         senha: str,
         telefone: str,
@@ -67,7 +73,9 @@ class GestorRestaurante(Usuario):
         data_cadastro: Optional[datetime] = None,
         status: StatusUsuario = StatusUsuario.ATIVO,
     ) -> None:
-        super().__init__(nome, email, senha, telefone, id, data_cadastro, status)
+        super().__init__(
+            nome, login, email, senha, telefone, id, data_cadastro, status
+        )
         self.restaurante_id = restaurante_id
 
     @property
