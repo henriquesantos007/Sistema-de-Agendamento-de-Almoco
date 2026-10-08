@@ -1,4 +1,5 @@
 from source.dominio.usuarios.excecoes import (
+    ErroPersistencia,
     ErroValidacaoCampo,
     LoginInvalido,
     SenhaInvalida,
@@ -14,6 +15,7 @@ from source.dominio.usuarios.usuario import (
 
 __all__ = [
     "Administrador",
+    "ErroPersistencia",
     "ErroValidacaoCampo",
     "Estudante",
     "GestorRestaurante",
