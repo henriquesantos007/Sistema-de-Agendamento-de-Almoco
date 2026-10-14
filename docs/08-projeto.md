@@ -438,3 +438,11 @@ stateDiagram-v2
 | `PIX` | No aplicativo, ao agendar | Sim | `PENDENTE` → `APROVADO` ou `RECUSADO` | Estorno pelo gateway (`ESTORNADO`) |
 | `CARTAO` | No aplicativo, ao agendar | Sim | `PENDENTE` → `APROVADO` ou `RECUSADO` | Estorno pelo gateway (`ESTORNADO`) |
 | `DINHEIRO` | No restaurante, na retirada | Não | `PENDENTE` até a retirada, quando vira `APROVADO` | Nada a estornar (`CANCELADO`) |
+
+## Padrões de Projeto Utilizados
+
+| Padrão | Onde foi aplicado | Justificativa |
+|--------|-------------------|---------------|
+| **Factory Method** | `FabricaRepositorio` | Isola a lógica de instanciação da persistência escolhida no momento da execução (Memória RAM vs Arquivo Binário), permitindo substituição transparente. |
+| **Composite** | `ValidadorUsuario` | Permite agrupar várias regras de validação independentes (`ValidadorLogin`, `ValidadorSenha`) em uma única lista, tratando a execução delas de forma uniforme. |
+| **Repository** | `RepositorioUsuarios` | Isola as regras de negócio da camada de domínio dos detalhes de infraestrutura (acesso a dados). |
