@@ -97,7 +97,7 @@ def main():
     ))
 
     try:
-        usuarios = repositorio.listar_todos()
+        usuarios = controlador.listar_todos()
     except ErroPersistencia as erro:
         print(f"Falha de persistencia ao listar usuarios: {erro}")
         return
