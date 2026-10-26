@@ -64,3 +64,6 @@ class ControladorUsuario:
             )
 
         raise ValueError("perfil invalido")
+
+    def listar_todos(self):
+        return self.repositorio.listar_todos()
