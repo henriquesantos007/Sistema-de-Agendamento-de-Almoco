@@ -67,3 +67,6 @@ class ControladorUsuario:
 
     def listar_todos(self):
         return self.repositorio.listar_todos()
+
+    def contar(self) -> int:
+        return self.repositorio.contar()

@@ -28,3 +28,7 @@ class RepositorioUsuarios(ABC):
     @abstractmethod
     def existe_telefone(self, telefone: str) -> bool:
         raise NotImplementedError
+    
+    @abstractmethod
+    def contar(self) -> int:
+        raise NotImplementedError
