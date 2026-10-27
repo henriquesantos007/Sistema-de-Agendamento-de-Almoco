@@ -302,6 +302,43 @@ classDiagram
     note for Usuario "Detalhado no diagrama de domínio"
 ```
 
+### CRUD de restaurantes: validação e controle
+
+O `ControladorRestaurante` valida e normaliza os `DadosRestaurante` antes de
+cadastrar ou atualizar a entidade. O `ValidadorRestaurante` exige nome,
+localização, telefone e um horário limite válido; a descrição é opcional.
+Dados inválidos geram `DadosRestauranteInvalidos`, com as mensagens reunidas.
+Consultas e atualizações de identificadores inexistentes geram
+`RestauranteNaoEncontrado`; a remoção retorna `false` quando o ID não existe.
+
+```mermaid
+classDiagram
+    class ControladorRestaurante {
+        +cadastrar(dados: DadosRestaurante) Restaurante
+        +buscarPorId(restauranteId: int) Restaurante
+        +listarTodos() List~Restaurante~
+        +atualizar(restauranteId: int, dados: DadosRestaurante) Restaurante
+        +remover(restauranteId: int) boolean
+    }
+
+    class ValidadorRestaurante {
+        +validar(dados: DadosRestaurante) List~String~
+    }
+
+    class RepositorioRestaurantes {
+        <<interface>>
+    }
+
+    class DadosRestauranteInvalidos
+    class RestauranteNaoEncontrado
+
+    ControladorRestaurante --> ValidadorRestaurante : valida
+    ControladorRestaurante --> RepositorioRestaurantes : usa
+    ControladorRestaurante ..> DadosRestaurante : recebe
+    ControladorRestaurante ..> DadosRestauranteInvalidos : lança
+    ControladorRestaurante ..> RestauranteNaoEncontrado : lança
+```
+
 ### Persistência
 
 `RepositorioUsuarios` é a abstração definida no domínio, da qual a aplicação depende. Há duas implementações, escolhidas no início da execução pela `FabricaRepositorio`: em memória (RAM) e em arquivo binário. O `RepositorioUsuariosArquivo` herda do repositório em memória, carrega o arquivo ao iniciar e o regrava a cada inclusão. Falhas de arquivo (`IOError`) e de serialização são encapsuladas em `ErroPersistencia`, de modo que as camadas superiores não dependam de detalhes de infraestrutura.
