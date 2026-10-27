@@ -18,6 +18,10 @@ class RepositorioUsuarios(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def existe_login(self, login: str) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
     def existe_matricula(self, matricula: str) -> bool:
         raise NotImplementedError
 
