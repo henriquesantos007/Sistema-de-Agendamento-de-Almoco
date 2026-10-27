@@ -7,6 +7,9 @@ from source.dominio.usuarios.politica_credenciais import (
     validar_login,
     validar_senha,
 )
+from source.dominio.restaurantes.repositorio_restaurantes import (
+    RepositorioRestaurantes,
+)
 
 
 def normalizar_telefone(telefone: str) -> str:
@@ -81,6 +84,9 @@ class ValidadorEstudante(ValidadorUsuarioBase):
         return erros
 
 class ValidadorGestorRestaurante(ValidadorUsuarioBase):
+    def __init__(self, repositorio_restaurantes: RepositorioRestaurantes) -> None:
+        self.repositorio_restaurantes = repositorio_restaurantes
+
     def validar(self, dados, repositorio) -> List[str]:
         erros = []
 
@@ -89,6 +95,8 @@ class ValidadorGestorRestaurante(ValidadorUsuarioBase):
 
         if dados.restaurante_id is None:
             erros.append("restaurante e obrigatorio para gestor")
+        elif self.repositorio_restaurantes.buscar_por_id(dados.restaurante_id) is None:
+            erros.append("restaurante nao encontrado")
 
         return erros
 

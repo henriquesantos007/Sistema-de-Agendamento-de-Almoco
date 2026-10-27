@@ -39,6 +39,10 @@ O sistema DEVE cadastrar um usuário quando receber perfil, nome, login, e-mail,
 - **WHEN** o Administrador cadastra um Gestor de Restaurante sem informar o restaurante
 - **THEN** o sistema recusa o cadastro informando "restaurante e obrigatorio para gestor"
 
+#### Scenario: Gestor referencia restaurante inexistente
+- **WHEN** o Administrador cadastra um Gestor de Restaurante com um identificador de restaurante que não está cadastrado
+- **THEN** o sistema recusa o cadastro informando "restaurante nao encontrado"
+
 ### Requirement: RF02 — Regras de login
 O sistema DEVE aceitar apenas logins não vazios, com no máximo 12 caracteres e sem números, desconsiderando espaços no início e no fim.
 

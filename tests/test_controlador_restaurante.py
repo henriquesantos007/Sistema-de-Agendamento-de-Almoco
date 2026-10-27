@@ -7,11 +7,14 @@ from source.aplicacao.restaurantes import (
     ControladorRestaurante,
     DadosRestauranteInvalidos,
     RestauranteNaoEncontrado,
+    RestauranteVinculado,
     ValidadorRestaurante,
 )
 from source.dominio.restaurantes import DadosRestaurante, StatusRestaurante
+from source.dominio.usuarios import GestorRestaurante
 from source.infraestrutura.persistencia.memoria import (
     RepositorioRestaurantesMemoria,
+    RepositorioUsuariosMemoria,
 )
 
 
@@ -37,8 +40,17 @@ def repositorio():
 
 
 @pytest.fixture
-def controlador(repositorio):
-    return ControladorRestaurante(repositorio, ValidadorRestaurante())
+def repositorio_usuarios():
+    return RepositorioUsuariosMemoria()
+
+
+@pytest.fixture
+def controlador(repositorio, repositorio_usuarios):
+    return ControladorRestaurante(
+        repositorio,
+        ValidadorRestaurante(),
+        repositorio_usuarios,
+    )
 
 
 def test_deve_cadastrar_restaurante_normalizando_campos(controlador):
@@ -156,3 +168,46 @@ def test_deve_remover_restaurante_e_retornar_resultado(controlador):
     assert controlador.remover(restaurante.id) is True
     assert controlador.listar_todos() == []
     assert controlador.remover(restaurante.id) is False
+
+
+def test_deve_impedir_remocao_de_restaurante_com_gestor_vinculado(
+    controlador,
+    repositorio_usuarios,
+):
+    restaurante = controlador.cadastrar(criar_dados_restaurante())
+    assert restaurante.id is not None
+    repositorio_usuarios.adicionar(
+        GestorRestaurante(
+            nome="Gestor",
+            login="gestor",
+            email="gestor@example.com",
+            senha="hash",
+            telefone="83999990001",
+            restaurante_id=restaurante.id,
+        )
+    )
+
+    with pytest.raises(RestauranteVinculado):
+        controlador.remover(restaurante.id)
+
+    assert controlador.buscar_por_id(restaurante.id) is restaurante
+
+
+def test_deve_remover_restaurante_se_gestor_estiver_vinculado_a_outro(
+    controlador,
+    repositorio_usuarios,
+):
+    restaurante = controlador.cadastrar(criar_dados_restaurante())
+    assert restaurante.id is not None
+    repositorio_usuarios.adicionar(
+        GestorRestaurante(
+            nome="Gestor",
+            login="gestor",
+            email="gestor@example.com",
+            senha="hash",
+            telefone="83999990001",
+            restaurante_id=999,
+        )
+    )
+
+    assert controlador.remover(restaurante.id) is True

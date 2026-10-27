@@ -310,6 +310,10 @@ localização, telefone e um horário limite válido; a descrição é opcional.
 Dados inválidos geram `DadosRestauranteInvalidos`, com as mensagens reunidas.
 Consultas e atualizações de identificadores inexistentes geram
 `RestauranteNaoEncontrado`; a remoção retorna `false` quando o ID não existe.
+O `ValidadorGestorRestaurante` consulta o repositório de restaurantes e recusa
+cadastros de gestores sem restaurante ou com ID inexistente. O controlador de
+restaurantes consulta os usuários antes da remoção e lança `RestauranteVinculado`
+se houver um gestor associado.
 
 ```mermaid
 classDiagram
@@ -325,18 +329,29 @@ classDiagram
         +validar(dados: DadosRestaurante) List~String~
     }
 
+    class ValidadorGestorRestaurante {
+        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios) List~String~
+    }
+
+    class ControladorUsuario
+
     class RepositorioRestaurantes {
         <<interface>>
     }
 
     class DadosRestauranteInvalidos
     class RestauranteNaoEncontrado
+    class RestauranteVinculado
 
     ControladorRestaurante --> ValidadorRestaurante : valida
     ControladorRestaurante --> RepositorioRestaurantes : usa
+    ControladorRestaurante --> RepositorioUsuarios : verifica vinculos
     ControladorRestaurante ..> DadosRestaurante : recebe
     ControladorRestaurante ..> DadosRestauranteInvalidos : lança
     ControladorRestaurante ..> RestauranteNaoEncontrado : lança
+    ControladorRestaurante ..> RestauranteVinculado : lança
+    ControladorUsuario --> ValidadorGestorRestaurante : compõe
+    ValidadorGestorRestaurante --> RepositorioRestaurantes : verifica existencia
 ```
 
 ### Persistência

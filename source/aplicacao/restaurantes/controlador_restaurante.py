@@ -3,6 +3,7 @@ from typing import List
 from source.aplicacao.restaurantes.excecoes import (
     DadosRestauranteInvalidos,
     RestauranteNaoEncontrado,
+    RestauranteVinculado,
 )
 from source.aplicacao.restaurantes.validador_restaurante import (
     ValidadorRestaurante,
@@ -12,6 +13,7 @@ from source.dominio.restaurantes import (
     Restaurante,
     RepositorioRestaurantes,
 )
+from source.dominio.usuarios import GestorRestaurante, RepositorioUsuarios
 
 
 class ControladorRestaurante:
@@ -19,9 +21,11 @@ class ControladorRestaurante:
         self,
         repositorio: RepositorioRestaurantes,
         validador: ValidadorRestaurante,
+        repositorio_usuarios: RepositorioUsuarios,
     ) -> None:
         self.repositorio = repositorio
         self.validador = validador
+        self.repositorio_usuarios = repositorio_usuarios
 
     def cadastrar(self, dados: DadosRestaurante) -> Restaurante:
         dados_validos = self._validar_e_normalizar(dados)
@@ -48,6 +52,17 @@ class ControladorRestaurante:
         return self.repositorio.atualizar(restaurante)
 
     def remover(self, restaurante_id: int) -> bool:
+        if self.repositorio.buscar_por_id(restaurante_id) is None:
+            return False
+
+        gestores_vinculados = any(
+            isinstance(usuario, GestorRestaurante)
+            and usuario.restaurante_id == restaurante_id
+            for usuario in self.repositorio_usuarios.listar_todos()
+        )
+        if gestores_vinculados:
+            raise RestauranteVinculado(restaurante_id)
+
         return self.repositorio.remover(restaurante_id)
 
     def _validar_e_normalizar(self, dados: DadosRestaurante) -> DadosRestaurante:

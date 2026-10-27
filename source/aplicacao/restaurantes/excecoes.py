@@ -11,3 +11,11 @@ class RestauranteNaoEncontrado(LookupError):
     def __init__(self, restaurante_id: int) -> None:
         self.restaurante_id = restaurante_id
         super().__init__(f"restaurante nao encontrado: {restaurante_id}")
+
+
+class RestauranteVinculado(ValueError):
+    def __init__(self, restaurante_id: int) -> None:
+        self.restaurante_id = restaurante_id
+        super().__init__(
+            f"restaurante {restaurante_id} possui gestores vinculados"
+        )
