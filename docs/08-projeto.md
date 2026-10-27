@@ -58,7 +58,7 @@ classDiagram
         -horarioLimiteAgendamento: Time
         -status: StatusRestaurante
         -dataCadastro: DateTime
-        +atualizarDados()
+        +atualizarDados(nome: String, descricao: String, localizacao: String, telefone: String, horarioLimiteAgendamento: Time)
         +cardapioVigenteEm(data: Date) Cardapio
     }
 
