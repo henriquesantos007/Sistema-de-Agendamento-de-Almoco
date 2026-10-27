@@ -58,9 +58,19 @@ classDiagram
         -horarioLimiteAgendamento: Time
         -status: StatusRestaurante
         -dataCadastro: DateTime
-        +atualizarDados(nome: String, descricao: String, localizacao: String, telefone: String, horarioLimiteAgendamento: Time)
+        +atualizarDados(dados: DadosRestaurante)
         +cardapioVigenteEm(data: Date) Cardapio
     }
+
+    class DadosRestaurante {
+        +nome: String
+        +descricao: String
+        +localizacao: String
+        +telefone: String
+        +horarioLimiteAgendamento: Time
+    }
+
+    Restaurante ..> DadosRestaurante : recebe dados
 
     class Prato {
         -id: Long

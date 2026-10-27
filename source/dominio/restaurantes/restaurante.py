@@ -2,6 +2,8 @@ from datetime import datetime, time
 from enum import Enum
 from typing import Optional
 
+from source.dominio.restaurantes.dados_restaurante import DadosRestaurante
+
 
 class StatusRestaurante(Enum):
     ATIVO = "ATIVO"
@@ -10,36 +12,25 @@ class StatusRestaurante(Enum):
 
 
 class Restaurante:
-    def __init__(
-        self,
-        nome: str,
-        localizacao: str,
-        telefone: str,
-        horario_limite_agendamento: time,
-        descricao: str = "",
-        id: Optional[int] = None,
-        data_cadastro: Optional[datetime] = None,
-        status: StatusRestaurante = StatusRestaurante.ATIVO,
-    ) -> None:
-        self.id = id
-        self.nome = nome
-        self.descricao = descricao
-        self.localizacao = localizacao
-        self.telefone = telefone
-        self.horario_limite_agendamento = horario_limite_agendamento
-        self.status = status
-        self.data_cadastro = data_cadastro or datetime.now()
+    def __init__(self, dados: DadosRestaurante) -> None:
+        self.id: Optional[int] = None
+        self.nome: str
+        self.descricao: str
+        self.localizacao: str
+        self.telefone: str
+        self.horario_limite_agendamento: time
+        self.status: StatusRestaurante
+        self.data_cadastro: datetime
+        self._aplicar_dados(dados)
+        self.status = StatusRestaurante.ATIVO
+        self.data_cadastro = datetime.now()
 
-    def atualizar_dados(
-        self,
-        nome: str,
-        descricao: str,
-        localizacao: str,
-        telefone: str,
-        horario_limite_agendamento: time,
-    ) -> None:
-        self.nome = nome
-        self.descricao = descricao
-        self.localizacao = localizacao
-        self.telefone = telefone
-        self.horario_limite_agendamento = horario_limite_agendamento
+    def atualizar_dados(self, dados: DadosRestaurante) -> None:
+        self._aplicar_dados(dados)
+
+    def _aplicar_dados(self, dados: DadosRestaurante) -> None:
+        self.nome = dados.nome
+        self.descricao = dados.descricao
+        self.localizacao = dados.localizacao
+        self.telefone = dados.telefone
+        self.horario_limite_agendamento = dados.horario_limite_agendamento

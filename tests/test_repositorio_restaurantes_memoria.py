@@ -1,8 +1,9 @@
 from datetime import time
+from typing import Optional
 
 import pytest
 
-from source.dominio.restaurantes import Restaurante
+from source.dominio.restaurantes import DadosRestaurante, Restaurante
 from source.infraestrutura.persistencia.memoria import (
     RepositorioRestaurantesMemoria,
 )
@@ -10,10 +11,12 @@ from source.infraestrutura.persistencia.memoria import (
 
 def criar_restaurante(nome: str) -> Restaurante:
     return Restaurante(
-        nome=nome,
-        localizacao="Centro de Informatica",
-        telefone="83999990000",
-        horario_limite_agendamento=time(10, 0),
+        DadosRestaurante(
+            nome=nome,
+            localizacao="Centro de Informatica",
+            telefone="83999990000",
+            horario_limite_agendamento=time(10, 0),
+        )
     )
 
 
@@ -71,11 +74,13 @@ def test_deve_atualizar_restaurante_existente():
     atualizado = criar_restaurante("Nome novo")
     atualizado.id = cadastrado.id
     atualizado.atualizar_dados(
-        nome="Nome novo",
-        descricao="Descricao",
-        localizacao="Nova localizacao",
-        telefone="83888880000",
-        horario_limite_agendamento=time(9, 30),
+        DadosRestaurante(
+            nome="Nome novo",
+            descricao="Descricao",
+            localizacao="Nova localizacao",
+            telefone="83888880000",
+            horario_limite_agendamento=time(9, 30),
+        )
     )
 
     assert repositorio.atualizar(atualizado) is atualizado
@@ -87,10 +92,13 @@ def test_deve_atualizar_restaurante_existente():
     "restaurante_id",
     [None, 999],
 )
-def test_deve_recusar_atualizacao_de_restaurante_inexistente(restaurante_id):
+def test_deve_recusar_atualizacao_de_restaurante_inexistente(
+    restaurante_id: Optional[int],
+):
     repositorio = RepositorioRestaurantesMemoria()
     restaurante = criar_restaurante("Nao cadastrado")
-    restaurante.id = restaurante_id
+    if restaurante_id is not None:
+        restaurante.id = restaurante_id
 
     with pytest.raises(ValueError, match="restaurante"):
         repositorio.atualizar(restaurante)
