@@ -1,6 +1,6 @@
 # ADR-0002: Organizar a estrutura inicial por camadas
 
-- Status: Aceito
+- Status: Aceito; parcialmente substituído pelo [ADR-0004](0004-remover-pacote-de-apresentacao-vazio.md)
 - Data: 2026-09-30
 - Origem: merge `153913a` (`chore(arquitetura): criar estrutura inicial de pacotes`), proveniente da branch `chore/pac-pacotes-iniciais`
 
