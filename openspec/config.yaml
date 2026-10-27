@@ -6,7 +6,7 @@ context: |
   Sistema: Sistema de Agendamento de Almoço CI — aplicação web para centralizar a divulgação de cardápios e o agendamento de almoços do Centro de Informática da UFPB.
   Visão, usuários, escopo negativo e restrições estão em docs/01-visao.md.
   Termos do domínio estão em docs/02-glossario.md; use-os exatamente como definidos.
-  Arquitetura: monolito modular em camadas (domínio, aplicação, infraestrutura, apresentacao).
+  Arquitetura: monolito modular em camadas (domínio, aplicação, infraestrutura). A interface atual é o main.py, de linha de comando (ADR-0004).
 
 rules:
   specs:
