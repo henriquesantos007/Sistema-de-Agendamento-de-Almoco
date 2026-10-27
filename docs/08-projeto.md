@@ -58,9 +58,19 @@ classDiagram
         -horarioLimiteAgendamento: Time
         -status: StatusRestaurante
         -dataCadastro: DateTime
-        +atualizarDados()
+        +atualizarDados(dados: DadosRestaurante)
         +cardapioVigenteEm(data: Date) Cardapio
     }
+
+    class DadosRestaurante {
+        +nome: String
+        +descricao: String
+        +localizacao: String
+        +telefone: String
+        +horarioLimiteAgendamento: Time
+    }
+
+    Restaurante ..> DadosRestaurante : recebe dados
 
     class Prato {
         -id: Long
@@ -292,9 +302,61 @@ classDiagram
     note for Usuario "Detalhado no diagrama de domínio"
 ```
 
+### CRUD de restaurantes: validação e controle
+
+O `ControladorRestaurante` valida e normaliza os `DadosRestaurante` antes de
+cadastrar ou atualizar a entidade. O `ValidadorRestaurante` exige nome,
+localização, telefone e um horário limite válido; a descrição é opcional.
+Dados inválidos geram `DadosRestauranteInvalidos`, com as mensagens reunidas.
+Consultas e atualizações de identificadores inexistentes geram
+`RestauranteNaoEncontrado`; a remoção retorna `false` quando o ID não existe.
+O `ValidadorGestorRestaurante` consulta o repositório de restaurantes e recusa
+cadastros de gestores sem restaurante ou com ID inexistente. O controlador de
+restaurantes consulta os usuários antes da remoção e lança `RestauranteVinculado`
+se houver um gestor associado.
+
+```mermaid
+classDiagram
+    class ControladorRestaurante {
+        +cadastrar(dados: DadosRestaurante) Restaurante
+        +buscarPorId(restauranteId: int) Restaurante
+        +listarTodos() List~Restaurante~
+        +atualizar(restauranteId: int, dados: DadosRestaurante) Restaurante
+        +remover(restauranteId: int) boolean
+    }
+
+    class ValidadorRestaurante {
+        +validar(dados: DadosRestaurante) List~String~
+    }
+
+    class ValidadorGestorRestaurante {
+        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios) List~String~
+    }
+
+    class ControladorUsuario
+
+    class RepositorioRestaurantes {
+        <<interface>>
+    }
+
+    class DadosRestauranteInvalidos
+    class RestauranteNaoEncontrado
+    class RestauranteVinculado
+
+    ControladorRestaurante --> ValidadorRestaurante : valida
+    ControladorRestaurante --> RepositorioRestaurantes : usa
+    ControladorRestaurante --> RepositorioUsuarios : verifica vinculos
+    ControladorRestaurante ..> DadosRestaurante : recebe
+    ControladorRestaurante ..> DadosRestauranteInvalidos : lança
+    ControladorRestaurante ..> RestauranteNaoEncontrado : lança
+    ControladorRestaurante ..> RestauranteVinculado : lança
+    ControladorUsuario --> ValidadorGestorRestaurante : compõe
+    ValidadorGestorRestaurante --> RepositorioRestaurantes : verifica existencia
+```
+
 ### Persistência
 
-`RepositorioUsuarios` é a abstração definida no domínio, da qual a aplicação depende. Há duas implementações, escolhidas no início da execução pela `FabricaRepositorio`: em memória (RAM) e em arquivo binário. O `RepositorioUsuariosArquivo` herda do repositório em memória, carrega o arquivo ao iniciar e o regrava a cada inclusão. Falhas de arquivo (`IOError`) e de serialização são encapsuladas em `ErroPersistencia`, de modo que as camadas superiores não dependam de detalhes de infraestrutura.
+`RepositorioUsuarios` e `RepositorioRestaurantes` são as abstrações definidas no domínio, das quais a aplicação depende. As fábricas oferecem repositórios em memória ou em arquivo binário para cada entidade. `RepositorioUsuariosArquivo` e `RepositorioRestaurantesArquivo` carregam o arquivo ao iniciar e usam escrita atômica para suas alterações. Falhas de arquivo e de serialização são encapsuladas em `ErroPersistencia` no domínio correspondente, sem expor detalhes de infraestrutura às camadas superiores. Os arquivos padrão são `dados/usuarios.bin` e `dados/restaurantes.bin`.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -311,6 +373,16 @@ classDiagram
         +existeTelefone(telefone: String) boolean
     }
 
+    class RepositorioRestaurantes {
+        <<interface>>
+        +adicionar(restaurante: Restaurante) Restaurante
+        +buscarPorId(restauranteId: int) Restaurante
+        +listarTodos() List~Restaurante~
+        +atualizar(restaurante: Restaurante) Restaurante
+        +remover(restauranteId: int) boolean
+        +contar() int
+    }
+
     class RepositorioUsuariosMemoria {
         -usuarios: List~Usuario~
         -proximoId: int
@@ -323,9 +395,24 @@ classDiagram
         -salvar()
     }
 
+    class RepositorioRestaurantesMemoria {
+        -restaurantes: List~Restaurante~
+        -proximoId: int
+    }
+
+    class RepositorioRestaurantesArquivo {
+        -caminho: Path
+        +adicionar(restaurante: Restaurante) Restaurante
+        +atualizar(restaurante: Restaurante) Restaurante
+        +remover(restauranteId: int) boolean
+        -carregar()
+        -salvar()
+    }
+
     class FabricaRepositorio {
         <<factory>>
         +criarRepositorioUsuarios(armazenamento: String, caminho: Path) RepositorioUsuarios
+        +criarRepositorioRestaurantes(armazenamento: String, caminho: Path) RepositorioRestaurantes
     }
 
     class ErroPersistencia
@@ -337,9 +424,14 @@ classDiagram
     RepositorioUsuarios <|.. RepositorioUsuariosMemoria
     RepositorioUsuariosMemoria <|-- RepositorioUsuariosArquivo
     RepositorioUsuariosMemoria "1" o-- "0..*" Usuario : armazena
+    RepositorioRestaurantes <|.. RepositorioRestaurantesMemoria
+    RepositorioRestaurantesMemoria <|-- RepositorioRestaurantesArquivo
+    RepositorioRestaurantesMemoria "1" o-- "0..*" Restaurante : armazena
 
     FabricaRepositorio ..> RepositorioUsuariosMemoria : cria
     FabricaRepositorio ..> RepositorioUsuariosArquivo : cria
+    FabricaRepositorio ..> RepositorioRestaurantesMemoria : cria
+    FabricaRepositorio ..> RepositorioRestaurantesArquivo : cria
     RepositorioUsuariosArquivo ..> ErroPersistencia : lança
 
     note for ErroPersistencia "Herda de Exception. Encapsula IOError e falhas de serialização; a causa original fica em __cause__."

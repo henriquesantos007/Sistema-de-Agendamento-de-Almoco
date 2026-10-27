@@ -74,7 +74,22 @@ flowchart LR
 
 ---
 
-## 2. Visão Geral do Sistema
+## 2. Gerenciamento de Restaurantes (CRUD)
+
+O Administrador mantém os restaurantes disponíveis no sistema. O cadastro usa os dados definidos para `Restaurante` em [08-projeto.md](../08-projeto.md): nome, descrição, localização, telefone e horário limite para agendamento. O sistema gera o identificador e a data de cadastro, e inicia o restaurante com status `ATIVO`.
+
+| Operação | Regra |
+|----------|-------|
+| **Cadastrar** | Administrador informa os dados do restaurante; nome, localização, telefone e horário limite são obrigatórios. |
+| **Consultar/Listar** | Administrador pode consultar um restaurante pelo identificador ou listar os restaurantes cadastrados. |
+| **Atualizar** | Administrador pode alterar os dados do restaurante, sem modificar seu identificador nem sua data de cadastro. |
+| **Remover** | A remoção é recusada enquanto houver um `GestorRestaurante` vinculado ao restaurante. O gestor deve ser desvinculado antes. |
+
+Cada `GestorRestaurante` deve referenciar um restaurante existente. A associação é validada ao cadastrar ou atualizar o gestor, evitando referências a restaurantes inexistentes.
+
+---
+
+## 3. Visão Geral do Sistema
 
 A principal regra de negócio está no fluxo de agendamento: **o estudante só agenda para datas cobertas por um cardápio publicado** (diário ou semanal), e o restaurante pode **informar indisponibilidade no próprio dia**, o que cancela os agendamentos afetados e notifica os estudantes. 
 

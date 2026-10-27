@@ -16,8 +16,10 @@ from source.aplicacao.usuarios.validador_usuario import (
     ValidadorGestorRestaurante,
 )
 from source.dominio.usuarios import ErroPersistencia
+from source.dominio.restaurantes import ErroPersistencia as ErroPersistenciaRestaurantes
 from source.infraestrutura.persistencia.fabrica_repositorio import (
     ARMAZENAMENTOS,
+    criar_repositorio_restaurantes,
     criar_repositorio_usuarios
 )
 
@@ -46,7 +48,7 @@ def tentar_cadastrar(controlador, dados):
         print(f"Cadastro de '{dados.login}' recusado:")
         for mensagem in erro.erros:
             print(f"  - {mensagem}")
-    except ErroPersistencia as erro:
+    except (ErroPersistencia, ErroPersistenciaRestaurantes) as erro:
         print(f"Falha de persistencia ao cadastrar '{dados.login}': {erro}")
 
 
@@ -56,6 +58,9 @@ def main():
     try:
         repositorio = criar_repositorio_usuarios(
             argumentos.armazenamento, argumentos.caminho
+        )
+        repositorio_restaurantes = criar_repositorio_restaurantes(
+            argumentos.armazenamento
         )
     except ErroPersistencia as erro:
         print(f"Nao foi possivel iniciar o armazenamento: {erro}")
@@ -68,7 +73,7 @@ def main():
         ValidadorEmail(),
         ValidadorSenha(),
         ValidadorEstudante(),
-        ValidadorGestorRestaurante(),
+        ValidadorGestorRestaurante(repositorio_restaurantes),
     ])
 
     controlador = ControladorUsuario(repositorio, validador)
