@@ -45,6 +45,7 @@ classDiagram
         <<Control>>
         +validar(dados: DadosUsuario) List~String~
         -emailEhValido(email: String) boolean
+        -loginJaCadastrado(login: String) boolean
         -emailJaCadastrado(email: String) boolean
         -matriculaJaCadastrada(matricula: String) boolean
     }
@@ -56,6 +57,7 @@ classDiagram
         +adicionar(usuario: Usuario) Usuario
         +listarTodos() List~Usuario~
         +buscarPorEmail(email: String) Usuario
+        +existeLogin(login: String) boolean
         +existeMatricula(matricula: String) boolean
     }
 
@@ -109,7 +111,7 @@ sequenceDiagram
     Admin->>T: preenche dados e perfil
     T->>C: cadastrarUsuario(dados)
     C->>V: validar(dados)
-    V->>R: buscarPorEmail / existeMatricula
+    V->>R: existeLogin / buscarPorEmail / existeMatricula
     R-->>V: resultado
     alt dados inválidos
         V-->>C: lista de erros
