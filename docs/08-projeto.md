@@ -341,7 +341,7 @@ classDiagram
 
 ### Persistência
 
-`RepositorioUsuarios` é a abstração definida no domínio, da qual a aplicação depende. Há duas implementações, escolhidas no início da execução pela `FabricaRepositorio`: em memória (RAM) e em arquivo binário. O `RepositorioUsuariosArquivo` herda do repositório em memória, carrega o arquivo ao iniciar e o regrava a cada inclusão. Falhas de arquivo (`IOError`) e de serialização são encapsuladas em `ErroPersistencia`, de modo que as camadas superiores não dependam de detalhes de infraestrutura.
+`RepositorioUsuarios` e `RepositorioRestaurantes` são as abstrações definidas no domínio, das quais a aplicação depende. As fábricas oferecem repositórios em memória ou em arquivo binário para cada entidade. `RepositorioUsuariosArquivo` e `RepositorioRestaurantesArquivo` carregam o arquivo ao iniciar e usam escrita atômica para suas alterações. Falhas de arquivo e de serialização são encapsuladas em `ErroPersistencia` no domínio correspondente, sem expor detalhes de infraestrutura às camadas superiores. Os arquivos padrão são `dados/usuarios.bin` e `dados/restaurantes.bin`.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -358,6 +358,16 @@ classDiagram
         +existeTelefone(telefone: String) boolean
     }
 
+    class RepositorioRestaurantes {
+        <<interface>>
+        +adicionar(restaurante: Restaurante) Restaurante
+        +buscarPorId(restauranteId: int) Restaurante
+        +listarTodos() List~Restaurante~
+        +atualizar(restaurante: Restaurante) Restaurante
+        +remover(restauranteId: int) boolean
+        +contar() int
+    }
+
     class RepositorioUsuariosMemoria {
         -usuarios: List~Usuario~
         -proximoId: int
@@ -370,9 +380,24 @@ classDiagram
         -salvar()
     }
 
+    class RepositorioRestaurantesMemoria {
+        -restaurantes: List~Restaurante~
+        -proximoId: int
+    }
+
+    class RepositorioRestaurantesArquivo {
+        -caminho: Path
+        +adicionar(restaurante: Restaurante) Restaurante
+        +atualizar(restaurante: Restaurante) Restaurante
+        +remover(restauranteId: int) boolean
+        -carregar()
+        -salvar()
+    }
+
     class FabricaRepositorio {
         <<factory>>
         +criarRepositorioUsuarios(armazenamento: String, caminho: Path) RepositorioUsuarios
+        +criarRepositorioRestaurantes(armazenamento: String, caminho: Path) RepositorioRestaurantes
     }
 
     class ErroPersistencia
@@ -384,9 +409,14 @@ classDiagram
     RepositorioUsuarios <|.. RepositorioUsuariosMemoria
     RepositorioUsuariosMemoria <|-- RepositorioUsuariosArquivo
     RepositorioUsuariosMemoria "1" o-- "0..*" Usuario : armazena
+    RepositorioRestaurantes <|.. RepositorioRestaurantesMemoria
+    RepositorioRestaurantesMemoria <|-- RepositorioRestaurantesArquivo
+    RepositorioRestaurantesMemoria "1" o-- "0..*" Restaurante : armazena
 
     FabricaRepositorio ..> RepositorioUsuariosMemoria : cria
     FabricaRepositorio ..> RepositorioUsuariosArquivo : cria
+    FabricaRepositorio ..> RepositorioRestaurantesMemoria : cria
+    FabricaRepositorio ..> RepositorioRestaurantesArquivo : cria
     RepositorioUsuariosArquivo ..> ErroPersistencia : lança
 
     note for ErroPersistencia "Herda de Exception. Encapsula IOError e falhas de serialização; a causa original fica em __cause__."
