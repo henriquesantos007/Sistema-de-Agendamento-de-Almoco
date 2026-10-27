@@ -183,7 +183,7 @@ Esta seção mostra as classes que implementam o cadastro de usuários, em dois 
 
 O `ControladorUsuario` pede ao `ValidadorUsuario` que valide os `DadosUsuario`. O `ValidadorUsuario` compõe vários validadores independentes (padrão *Composite*) e reúne as mensagens de todos. Se houver erros, o controlador lança `DadosUsuarioInvalidos`.
 
-As regras de login e senha ficam no `PoliticaCredenciais`, que **lança** `LoginInvalido` ou `SenhaInvalida` com todos os motivos encontrados. `ValidadorLogin` e `ValidadorSenha` **capturam** essas exceções e as convertem em mensagens para o `ValidadorUsuario`.
+As regras de login e senha ficam no `PoliticaCredenciais`, que **lança** `LoginInvalido` ou `SenhaInvalida` com todos os motivos encontrados. `ValidadorLogin` e `ValidadorSenha` **capturam** essas exceções e as convertem em mensagens para o `ValidadorUsuario`. Se o login tiver formato válido, o `ValidadorLogin` ainda consulta o `RepositorioUsuarios` (`existeLogin`) e recusa logins já cadastrados.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -269,6 +269,7 @@ classDiagram
     ValidadorUsuarioBase <|-- ValidadorEstudante
     ValidadorUsuarioBase <|-- ValidadorGestorRestaurante
 
+    ValidadorLogin ..> RepositorioUsuarios : consulta
     ValidadorEmail ..> RepositorioUsuarios : consulta
     ValidadorEstudante ..> RepositorioUsuarios : consulta
 
@@ -287,6 +288,7 @@ classDiagram
     note for ErroValidacaoCampo "Herda de ValueError. Guarda todos os motivos da recusa."
     note for DadosUsuarioInvalidos "Herda de ValueError. Reúne as mensagens de todos os validadores."
     note for ValidadorSenha "Senha vazia já é reportada pelo ValidadorDadosObrigatorios."
+    note for ValidadorLogin "Depois das regras de formato, recusa login já cadastrado (RF06)."
     note for Usuario "Detalhado no diagrama de domínio"
 ```
 
@@ -304,6 +306,7 @@ classDiagram
         +adicionar(usuario: Usuario) Usuario
         +listarTodos() List~Usuario~
         +buscarPorEmail(email: String) Usuario
+        +existeLogin(login: String) boolean
         +existeMatricula(matricula: String) boolean
         +existeTelefone(telefone: String) boolean
     }
