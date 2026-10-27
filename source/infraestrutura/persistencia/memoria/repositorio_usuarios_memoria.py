@@ -30,6 +30,13 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
             None,
         )
 
+    def existe_login(self, login: str) -> bool:
+        login_normalizado = login.strip().casefold()
+        return any(
+            usuario.login.strip().casefold() == login_normalizado
+            for usuario in self._usuarios
+        )
+
     def existe_matricula(self, matricula: str) -> bool:
         matricula_normalizada = matricula.strip().casefold()
         return any(

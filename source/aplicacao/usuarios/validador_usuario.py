@@ -95,9 +95,12 @@ class ValidadorGestorRestaurante(ValidadorUsuarioBase):
 class ValidadorLogin(ValidadorUsuarioBase):
     def validar(self, dados, repositorio) -> List[str]:
         try:
-            validar_login(dados.login)
+            login = validar_login(dados.login)
         except LoginInvalido as erro:
             return list(erro.motivos)
+
+        if repositorio.existe_login(login):
+            return ["login ja cadastrado"]
         return []
 
 class ValidadorSenha(ValidadorUsuarioBase):
