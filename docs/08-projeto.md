@@ -164,7 +164,7 @@ classDiagram
     }
 
     %% ========== RELACIONAMENTOS ==========
-    GestorRestaurante "1..*" --> "1" Restaurante : gerencia
+    GestorRestaurante "0..*" --> "1" Restaurante : gerencia
     Restaurante "1" *-- "0..*" Prato : oferece
     Restaurante "1" *-- "0..*" Cardapio : publica
     Cardapio "1" *-- "1..*" ItemCardapio : contém

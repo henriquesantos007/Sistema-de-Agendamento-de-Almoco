@@ -140,8 +140,8 @@ flowchart LR
     subgraph sistema["Sistema de Agendamento de Almoços"]
 
         subgraph acesso["Acesso"]
-            UC_Cadastro(["Cadastrar-se"])
-            UC_Login(["Autenticar-se"])
+            UC_Cadastro(["Cadastrar-se como Estudante (UC01)"])
+            UC_Login(["Autenticar-se (UC02)"])
             UC_EditarPerfil(["Editar Perfil (UC03)"])
             UC_AlterarSenha(["Alterar Senha (UC04)"])
         end
@@ -182,14 +182,14 @@ flowchart LR
             UC_AtivarDesativar(["Ativar/Desativar Usuário (UC09)"])
             UC_ValidarUsuario(["Validar Dados do Usuário (UC10)"])
             UC_VincularGestor(["Vincular Gestor a Restaurante (UC11)"])
-            UC12(["Cadastrar Restaurante"])
-            UC13(["Consultar Restaurante"])
-            UC14(["Listar Restaurantes"])
-            UC15(["Atualizar Restaurante"])
-            UC16(["Remover Restaurante"])
-            UC17(["Consultar Resumo de Entidades"])
-            UC18(["Validar Dados do Restaurante"])
-            UC19(["Verificar Gestores Vinculados"])
+            UC12(["Cadastrar Restaurante (UC12)"])
+            UC13(["Consultar Restaurante (UC13)"])
+            UC14(["Listar Restaurantes (UC14)"])
+            UC15(["Atualizar Restaurante (UC15)"])
+            UC16(["Remover Restaurante (UC16)"])
+            UC17(["Consultar Resumo de Entidades (UC17)"])
+            UC18(["Validar Dados do Restaurante (UC18)"])
+            UC19(["Verificar Gestores Vinculados (UC19)"])
         end
 
         subgraph pagamentoUC["Pagamento"]

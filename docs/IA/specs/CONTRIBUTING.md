@@ -134,7 +134,7 @@ docs/adr-event-sourcing
 
 > Independentes de linguagem. Válidas para qualquer camada.
 
-### 3.1 Nomes revelam intenção
+### 4.1 Nomes revelam intenção
 
 ```
 // ❌
@@ -154,13 +154,13 @@ void processarPedidosPendentes(List<Pedido> pedidos);
 - Evite abreviações que exijam contexto mental (`usrMgr` → `gerenciadorDeUsuario`)
 - Evite prefixos redundantes (`pedido.pedidoId` → `pedido.id`)
 
-### 3.2 Funções fazem uma coisa
+### 4.2 Funções fazem uma coisa
 
 - Uma função cabe em uma tela sem scroll → suspeite se precisar de mais
 - Se você precisar usar "e" para descrever o que ela faz, extraia
 - Parâmetros: idealmente 0–2; 3 é o limite; acima disso, agrupe em objeto
 
-### 3.3 Não deixe comentários onde o código pode falar
+### 4.3 Não deixe comentários onde o código pode falar
 
 ```
 // ❌ Comentário que repete o código
@@ -173,7 +173,7 @@ if (usuario.eMaiorDeIdade()) { ... }
 
 Comentários válidos: decisões de negócio não óbvias, workarounds com link para issue, advertências sobre efeitos colaterais.
 
-### 3.4 Sem números mágicos ou strings soltas
+### 4.4 Sem números mágicos ou strings soltas
 
 ```
 // ❌
@@ -186,13 +186,13 @@ if (tentativas > MAX_TENTATIVAS_LOGIN) { ... }
 status = StatusPedido.APROVADO;
 ```
 
-### 3.5 Regra do Escoteiro
+### 4.5 Regra do Escoteiro
 
 > Deixe o código *ligeiramente* melhor do que você encontrou.
 
 Não é refactoring massivo — é renomear uma variável confusa, extrair um bloco repetido, remover um TODO resolvido.
 
-### 3.6 Testes são cidadãos de primeira classe
+### 4.6 Testes são cidadãos de primeira classe
 
 - Todo bug corrigido ganha um teste que o reproduz antes do fix
 - Nomes de teste descrevem o cenário: `deve_retornar_erro_quando_email_invalido`
@@ -220,7 +220,7 @@ Não é refactoring massivo — é renomear uma variável confusa, extrair um bl
 
 Ao atuar neste repositório, siga adicionalmente:
 
-1. **Leia `docs/specs/` antes de implementar** — ali está o contrato do que deve ser feito
+1. **Leia `openspec/specs/` antes de implementar** — ali está o contrato do que deve ser feito
 2. **Leia o ADR relevante** antes de propor mudanças arquiteturais
 3. **Nunca altere contratos públicos** (interfaces, APIs, eventos) sem registrar um novo ADR
 4. **Prefira edições cirúrgicas** a reescritas completas de arquivos existentes
