@@ -164,7 +164,7 @@ classDiagram
     }
 
     %% ========== RELACIONAMENTOS ==========
-    GestorRestaurante "1..*" --> "1" Restaurante : gerencia
+    GestorRestaurante "0..*" --> "1" Restaurante : gerencia
     Restaurante "1" *-- "0..*" Prato : oferece
     Restaurante "1" *-- "0..*" Cardapio : publica
     Cardapio "1" *-- "1..*" ItemCardapio : contém
@@ -187,7 +187,7 @@ classDiagram
 
 ## Cadastro de usuários: validação e persistência
 
-Esta seção mostra as classes que implementam o cadastro de usuários, em dois diagramas. Os nomes seguem o código-fonte, e os membros usam a notação camelCase dos demais diagramas. Entram como **novas no Laboratório 2** o `ValidadorLogin`, o `ValidadorSenha`, o `PoliticaCredenciais`, as exceções (`ErroValidacaoCampo`, `LoginInvalido`, `SenhaInvalida` e `ErroPersistencia`), o `RepositorioUsuariosArquivo` e a `FabricaRepositorio`. As demais classes já existiam e aparecem como contexto.
+Esta seção mostra as classes que implementam o cadastro de usuários, em dois diagramas. Os nomes seguem o código-fonte e usam snake_case para métodos e parâmetros. Entram como **novas no Laboratório 2** o `ValidadorLogin`, o `ValidadorSenha`, o `PoliticaCredenciais`, as exceções (`ErroValidacaoCampo`, `LoginInvalido`, `SenhaInvalida` e `ErroPersistencia`), o `RepositorioUsuariosArquivo` e a `FabricaRepositorio`. As demais classes já existiam e aparecem como contexto.
 
 No Sprint 3, a subseção **Fachada e Singleton dos controladores** mostra o `FacadeSingletonController`, ponto único de acesso aos controladores de usuários e de restaurantes.
 
@@ -195,7 +195,7 @@ No Sprint 3, a subseção **Fachada e Singleton dos controladores** mostra o `Fa
 
 O `ControladorUsuario` pede ao `ValidadorUsuario` que valide os `DadosUsuario`. O `ValidadorUsuario` compõe vários validadores independentes (padrão *Composite*) e reúne as mensagens de todos. Se houver erros, o controlador lança `DadosUsuarioInvalidos`.
 
-As regras de login e senha ficam no `PoliticaCredenciais`, que **lança** `LoginInvalido` ou `SenhaInvalida` com todos os motivos encontrados. `ValidadorLogin` e `ValidadorSenha` **capturam** essas exceções e as convertem em mensagens para o `ValidadorUsuario`. Se o login tiver formato válido, o `ValidadorLogin` ainda consulta o `RepositorioUsuarios` (`existeLogin`) e recusa logins já cadastrados.
+As regras de login e senha ficam no `PoliticaCredenciais`, que **lança** `LoginInvalido` ou `SenhaInvalida` com todos os motivos encontrados. `ValidadorLogin` e `ValidadorSenha` **capturam** essas exceções e as convertem em mensagens para o `ValidadorUsuario`. Se o login tiver formato válido, o `ValidadorLogin` ainda consulta o `RepositorioUsuarios` (`existe_login`) e recusa logins já cadastrados.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -321,10 +321,10 @@ se houver um gestor associado.
 classDiagram
     class ControladorRestaurante {
         +cadastrar(dados: DadosRestaurante) Restaurante
-        +buscarPorId(restauranteId: int) Restaurante
-        +listarTodos() List~Restaurante~
-        +atualizar(restauranteId: int, dados: DadosRestaurante) Restaurante
-        +remover(restauranteId: int) boolean
+        +buscar_por_id(restaurante_id: int) Restaurante
+        +listar_todos() List~Restaurante~
+        +atualizar(restaurante_id: int, dados: DadosRestaurante) Restaurante
+        +remover(restaurante_id: int) boolean
         +contar() int
     }
 
@@ -359,11 +359,11 @@ classDiagram
 
 ### Fachada e Singleton dos controladores
 
-O `FacadeSingletonController` reúne o `ControladorUsuario` e o `ControladorRestaurante` atrás de uma única interface (padrão *Facade*) e existe em uma única instância por execução (padrão *Singleton*). Quem usa o sistema, como o `main.py`, conhece apenas a fachada: ela monta internamente os validadores e os controladores, e os clientes não os instanciam.
+O `FacadeSingletonController` reúne o `ControladorUsuario` e o `ControladorRestaurante` atrás de uma única interface (padrão *Facade*) e existe em uma única instância por execução (padrão *Singleton*). No fluxo de produção, o `main.py` obtém a fachada e usa suas operações; a fachada monta internamente os validadores e os controladores.
 
-A instância é obtida por `obterInstancia`. Na primeira chamada, recebe os repositórios de usuários e de restaurantes, que são as abstrações do domínio escolhidas pela fábrica no início da execução. As chamadas seguintes devolvem a mesma instância, e o construtor direto é recusado. A validação para impedir a alteração de repositórios após a inicialização foi extraída para o método privado `validarRepositoriosInalterados` visando manter o Princípio de Responsabilidade Única.
+A instância é obtida por `obter_instancia`. Na primeira chamada, recebe os repositórios de usuários e de restaurantes, que são as abstrações do domínio criadas pela fábrica no início da execução. As chamadas seguintes devolvem a mesma instância, e o construtor direto é recusado. A fachada verifica que chamadas posteriores não substituam os repositórios já configurados.
 
-O método `contarTotalEntidades` soma os usuários e os restaurantes cadastrados, e `obterContagemPorEntidade` detalha a contagem de cada tipo utilizando constantes estáticas (`CHAVE_USUARIOS`, `CHAVE_RESTAURANTES`) para evitar strings mágicas. Para isso, `RepositorioUsuarios` ganhou `contar()`, como `RepositorioRestaurantes` já tinha, e os dois controladores o expõem (ADR-0008).
+O método `contar_total_entidades` soma os usuários e os restaurantes cadastrados, e `obter_contagem_por_entidade` detalha a contagem de cada tipo utilizando as constantes `CHAVE_USUARIOS` e `CHAVE_RESTAURANTES`. Para isso, `RepositorioUsuarios` oferece `contar()`, como `RepositorioRestaurantes`, e os dois controladores expõem esse método (ADR-0008).
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -374,6 +374,12 @@ classDiagram
         <<cliente>>
     }
 
+    class FabricaRepositorio {
+        <<factory>>
+        +criar_repositorio_usuarios(armazenamento, caminho)
+        +criar_repositorio_restaurantes(armazenamento, caminho)
+    }
+
     class FacadeSingletonController {
         <<facade>>
         +CHAVE_USUARIOS: String$
@@ -382,34 +388,34 @@ classDiagram
         -trava: Lock$
         -controladorUsuario: ControladorUsuario
         -controladorRestaurante: ControladorRestaurante
-        +obterInstancia(repositorioUsuarios: RepositorioUsuarios, repositorioRestaurantes: RepositorioRestaurantes) FacadeSingletonController$
-        -validarRepositoriosInalterados(repositorioUsuarios: RepositorioUsuarios, repositorioRestaurantes: RepositorioRestaurantes)
+        +obter_instancia(repositorio_usuarios, repositorio_restaurantes) FacadeSingletonController$
         +reiniciar()$
-        +cadastrarUsuario(dados: DadosUsuario) Usuario
-        +listarUsuarios() List~Usuario~
-        +cadastrarRestaurante(dados: DadosRestaurante) Restaurante
-        +buscarRestaurante(restauranteId: int) Restaurante
-        +listarRestaurantes() List~Restaurante~
-        +atualizarRestaurante(restauranteId: int, dados: DadosRestaurante) Restaurante
-        +removerRestaurante(restauranteId: int) boolean
-        +contarUsuarios() int
-        +contarRestaurantes() int
-        +obterContagemPorEntidade() Map~String, int~
-        +contarTotalEntidades() int
+        -validar_repositorios_inalterados(repositorio_usuarios, repositorio_restaurantes) None
+        +cadastrar_usuario(dados: DadosUsuario) Usuario
+        +listar_usuarios() List~Usuario~
+        +cadastrar_restaurante(dados: DadosRestaurante) Restaurante
+        +buscar_restaurante(restaurante_id: int) Restaurante
+        +listar_restaurantes() List~Restaurante~
+        +atualizar_restaurante(restaurante_id: int, dados: DadosRestaurante) Restaurante
+        +remover_restaurante(restaurante_id: int) boolean
+        +contar_usuarios() int
+        +contar_restaurantes() int
+        +obter_contagem_por_entidade() Dict~String, int~
+        +contar_total_entidades() int
     }
 
     class ControladorUsuario {
         +cadastrar(dados: DadosUsuario) Usuario
-        +listarTodos() List~Usuario~
+        +listar_todos() List~Usuario~
         +contar() int
     }
 
     class ControladorRestaurante {
         +cadastrar(dados: DadosRestaurante) Restaurante
-        +buscarPorId(restauranteId: int) Restaurante
-        +listarTodos() List~Restaurante~
-        +atualizar(restauranteId: int, dados: DadosRestaurante) Restaurante
-        +remover(restauranteId: int) boolean
+        +buscar_por_id(restaurante_id: int) Restaurante
+        +listar_todos() List~Restaurante~
+        +atualizar(restaurante_id: int, dados: DadosRestaurante) Restaurante
+        +remover(restaurante_id: int) boolean
         +contar() int
     }
 
@@ -432,6 +438,7 @@ classDiagram
 
     class Restaurante
 
+    Main ..> FabricaRepositorio : cria repositórios
     Main ..> FacadeSingletonController : usa
     FacadeSingletonController --> FacadeSingletonController : instância única
     FacadeSingletonController "1" *-- "1" ControladorUsuario : monta
@@ -447,6 +454,9 @@ classDiagram
 
     RepositorioUsuarios "1" o-- "0..*" Usuario : armazena
     RepositorioRestaurantes "1" o-- "0..*" Restaurante : armazena
+
+    FabricaRepositorio ..> RepositorioUsuarios : cria
+    FabricaRepositorio ..> RepositorioRestaurantes : cria
 
     note for FacadeSingletonController "Construtor direto levanta TypeError. A criação é protegida por trava (thread-safe). Repositórios diferentes após a criação levantam ValueError. reiniciar() serve a testes e à troca de armazenamento."
     note for Usuario "Detalhado no diagrama de domínio"
@@ -465,26 +475,26 @@ classDiagram
     class RepositorioUsuarios {
         <<interface>>
         +adicionar(usuario: Usuario) Usuario
-        +listarTodos() List~Usuario~
-        +buscarPorEmail(email: String) Usuario
-        +existeLogin(login: String) boolean
-        +existeMatricula(matricula: String) boolean
-        +existeTelefone(telefone: String) boolean
+        +listar_todos() List~Usuario~
+        +buscar_por_email(email: String) Usuario
+        +existe_login(login: String) boolean
+        +existe_matricula(matricula: String) boolean
+        +existe_telefone(telefone: String) boolean
     }
 
     class RepositorioRestaurantes {
         <<interface>>
         +adicionar(restaurante: Restaurante) Restaurante
-        +buscarPorId(restauranteId: int) Restaurante
-        +listarTodos() List~Restaurante~
+        +buscar_por_id(restaurante_id: int) Restaurante
+        +listar_todos() List~Restaurante~
         +atualizar(restaurante: Restaurante) Restaurante
-        +remover(restauranteId: int) boolean
+        +remover(restaurante_id: int) boolean
         +contar() int
     }
 
     class RepositorioUsuariosMemoria {
         -usuarios: List~Usuario~
-        -proximoId: int
+        -proximo_id: int
     }
 
     class RepositorioUsuariosArquivo {
@@ -496,22 +506,22 @@ classDiagram
 
     class RepositorioRestaurantesMemoria {
         -restaurantes: List~Restaurante~
-        -proximoId: int
+        -proximo_id: int
     }
 
     class RepositorioRestaurantesArquivo {
         -caminho: Path
         +adicionar(restaurante: Restaurante) Restaurante
         +atualizar(restaurante: Restaurante) Restaurante
-        +remover(restauranteId: int) boolean
+        +remover(restaurante_id: int) boolean
         -carregar()
         -salvar()
     }
 
     class FabricaRepositorio {
         <<factory>>
-        +criarRepositorioUsuarios(armazenamento: String, caminho: Path) RepositorioUsuarios
-        +criarRepositorioRestaurantes(armazenamento: String, caminho: Path) RepositorioRestaurantes
+        +criar_repositorio_usuarios(armazenamento: String, caminho: Path) RepositorioUsuarios
+        +criar_repositorio_restaurantes(armazenamento: String, caminho: Path) RepositorioRestaurantes
     }
 
     class ErroPersistencia
@@ -639,4 +649,6 @@ stateDiagram-v2
 |--------|-------------------|---------------|
 | **Factory Method** | `FabricaRepositorio` | Isola a lógica de instanciação da persistência escolhida no momento da execução (Memória RAM vs Arquivo Binário), permitindo substituição transparente. |
 | **Composite** | `ValidadorUsuario` | Permite agrupar várias regras de validação independentes (`ValidadorLogin`, `ValidadorSenha`) em uma única lista, tratando a execução delas de forma uniforme. |
-| **Repository** | `RepositorioUsuarios` | Isola as regras de negócio da camada de domínio dos detalhes de infraestrutura (acesso a dados). |
+| **Repository** | `RepositorioUsuarios` e `RepositorioRestaurantes` | Isola as regras de negócio dos detalhes de infraestrutura e permite trocar as implementações de persistência. |
+| **Facade** | `FacadeSingletonController` | Oferece aos clientes uma única interface para as operações dos controladores de usuários e restaurantes. |
+| **Singleton** | `FacadeSingletonController` | Mantém uma instância da fachada por processo, obtida por `obter_instancia`. |
