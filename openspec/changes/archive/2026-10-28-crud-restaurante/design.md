@@ -23,7 +23,7 @@ expor o resumo de entidades.
 - Usar a fachada Singleton como ponto único de acesso no fluxo de produção.
 - Preservar a restrição de não remover restaurante vinculado a gestor.
 - Registrar a decisão da fachada no
-  [ADR-0008](../../../docs/07-arquitetura/adr/0008-fachada-singleton-dos-controladores.md);
+  [ADR-0008](../../../../docs/07-arquitetura/adr/0008-fachada-singleton-dos-controladores.md);
   não é necessária uma nova decisão arquitetural.
 
 ## Alternativas consideradas
