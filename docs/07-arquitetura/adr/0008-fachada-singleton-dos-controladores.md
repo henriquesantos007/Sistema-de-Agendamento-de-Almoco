@@ -30,6 +30,10 @@ Criar `FacadeSingletonController` em `source/aplicacao/fachada/`.
   na fábrica, chamada pelo `main.py`. Chamadas seguintes sem argumentos devolvem
   a mesma instância; repositórios diferentes dos usados na criação levantam
   `ValueError`, para a configuração não ser ignorada em silêncio.
+  O `main.py` aceita `--caminho` para o arquivo de usuários e
+  `--caminho-restaurantes` para o de restaurantes, para que as duas bases
+  ligadas pela fachada possam ser escolhidas juntas (antes, os restaurantes
+  usavam sempre `dados/restaurantes.bin`, como registrado no ADR-0007).
 - **Contagem:** adicionar `contar()` ao contrato `RepositorioUsuarios` (que já
   existia em `RepositorioRestaurantes`), implementado no repositório em memória
   e herdado pelo de arquivo, e expor `contar()` nos dois controladores.

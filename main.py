@@ -33,6 +33,11 @@ def ler_argumentos() -> argparse.Namespace:
         default=None,
         help="Arquivo de usuários (padrão: dados/usuarios.bin)",
     )
+    parser.add_argument(
+        "--caminho-restaurantes",
+        default=None,
+        help="Arquivo de restaurantes (padrão: dados/restaurantes.bin)",
+    )
     return parser.parse_args()
 
 
@@ -142,7 +147,9 @@ def main():
     try:
         fachada = FacadeSingletonController.obter_instancia(
             criar_repositorio_usuarios(argumentos.armazenamento, argumentos.caminho),
-            criar_repositorio_restaurantes(argumentos.armazenamento),
+            criar_repositorio_restaurantes(
+                argumentos.armazenamento, argumentos.caminho_restaurantes
+            ),
         )
     except ERROS_DE_PERSISTENCIA as erro:
         print(f"Não foi possível iniciar o armazenamento: {erro}")
