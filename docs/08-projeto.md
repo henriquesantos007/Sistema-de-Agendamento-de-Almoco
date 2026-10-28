@@ -189,6 +189,8 @@ classDiagram
 
 Esta seção mostra as classes que implementam o cadastro de usuários, em dois diagramas. Os nomes seguem o código-fonte, e os membros usam a notação camelCase dos demais diagramas. Entram como **novas no Laboratório 2** o `ValidadorLogin`, o `ValidadorSenha`, o `PoliticaCredenciais`, as exceções (`ErroValidacaoCampo`, `LoginInvalido`, `SenhaInvalida` e `ErroPersistencia`), o `RepositorioUsuariosArquivo` e a `FabricaRepositorio`. As demais classes já existiam e aparecem como contexto.
 
+No Sprint 3, a subseção **Fachada e Singleton dos controladores** mostra o `FacadeSingletonController`, ponto único de acesso aos controladores de usuários e de restaurantes.
+
 ### Validação do cadastro
 
 O `ControladorUsuario` pede ao `ValidadorUsuario` que valide os `DadosUsuario`. O `ValidadorUsuario` compõe vários validadores independentes (padrão *Composite*) e reúne as mensagens de todos. Se houver erros, o controlador lança `DadosUsuarioInvalidos`.
@@ -323,6 +325,7 @@ classDiagram
         +listarTodos() List~Restaurante~
         +atualizar(restauranteId: int, dados: DadosRestaurante) Restaurante
         +remover(restauranteId: int) boolean
+        +contar() int
     }
 
     class ValidadorRestaurante {
@@ -352,6 +355,102 @@ classDiagram
     ControladorRestaurante ..> RestauranteVinculado : lança
     ControladorUsuario --> ValidadorGestorRestaurante : compõe
     ValidadorGestorRestaurante --> RepositorioRestaurantes : verifica existencia
+```
+
+### Fachada e Singleton dos controladores
+
+O `FacadeSingletonController` reúne o `ControladorUsuario` e o `ControladorRestaurante` atrás de uma única interface (padrão *Facade*) e existe em uma única instância por execução (padrão *Singleton*). Quem usa o sistema, como o `main.py`, conhece apenas a fachada: ela monta internamente os validadores e os controladores, e os clientes não os instanciam.
+
+A instância é obtida por `obterInstancia`. Na primeira chamada, recebe os repositórios de usuários e de restaurantes, que são as abstrações do domínio escolhidas pela fábrica no início da execução. As chamadas seguintes devolvem a mesma instância, e o construtor direto é recusado. A validação para impedir a alteração de repositórios após a inicialização foi extraída para o método privado `validarRepositoriosInalterados` visando manter o Princípio de Responsabilidade Única.
+
+O método `contarTotralEntidades` soma os usuários e os restaurantes cadastrados, e `obterContagemPorEntidade` detalha a contagem de cada tipo utilizando constantes estáticas (`CHAVE_USUARIOS`, `CHAVE_RESTAURANTES`) para evitar strings mágicas. Para isso, `RepositorioUsuarios` ganhou `contar()`, como `RepositorioRestaurantes` já tinha, e os dois controladores o expõem (ADR-0008).
+
+```mermaid
+%%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
+classDiagram
+    direction TB
+
+    class Main {
+        <<cliente>>
+    }
+
+    class FacadeSingletonController {
+        <<facade>>
+        +CHAVE_USUARIOS: String$
+        +CHAVE_RESTAURANTES: String$
+        -instancia: FacadeSingletonController$
+        -trava: Lock$
+        -controladorUsuario: ControladorUsuario
+        -controladorRestaurante: ControladorRestaurante
+        +obterInstancia(repositorioUsuarios: RepositorioUsuarios, repositorioRestaurantes: RepositorioRestaurantes) FacadeSingletonController$
+        -validarRepositoriosInalterados(repositorioUsuarios: RepositorioUsuarios, repositorioRestaurantes: RepositorioRestaurantes)$
+        +reiniciar()$
+        +cadastrarUsuario(dados: DadosUsuario) Usuario
+        +listarUsuarios() List~Usuario~
+        +cadastrarRestaurante(dados: DadosRestaurante) Restaurante
+        +buscarRestaurante(restauranteId: int) Restaurante
+        +listarRestaurantes() List~Restaurante~
+        +atualizarRestaurante(restauranteId: int, dados: DadosRestaurante) Restaurante
+        +removerRestaurante(restauranteId: int) boolean
+        +contarUsuarios() int
+        +contarRestaurantes() int
+        +obterContagemPorEntidade() Map~String, int~
+        +contarTotalEntidades() int
+    }
+
+    class ControladorUsuario {
+        +cadastrar(dados: DadosUsuario) Usuario
+        +listarTodos() List~Usuario~
+        +contar() int
+    }
+
+    class ControladorRestaurante {
+        +cadastrar(dados: DadosRestaurante) Restaurante
+        +buscarPorId(restauranteId: int) Restaurante
+        +listarTodos() List~Restaurante~
+        +atualizar(restauranteId: int, dados: DadosRestaurante) Restaurante
+        +remover(restauranteId: int) boolean
+        +contar() int
+    }
+
+    class ValidadorUsuario
+    class ValidadorRestaurante
+
+    class RepositorioUsuarios {
+        <<interface>>
+        +contar() int
+    }
+
+    class RepositorioRestaurantes {
+        <<interface>>
+        +contar() int
+    }
+
+    class Usuario {
+        <<abstract>>
+    }
+
+    class Restaurante
+
+    Main ..> FacadeSingletonController : usa
+    FacadeSingletonController --> FacadeSingletonController : instância única
+    FacadeSingletonController "1" *-- "1" ControladorUsuario : monta
+    FacadeSingletonController "1" *-- "1" ControladorRestaurante : monta
+    FacadeSingletonController --> RepositorioUsuarios : recebe na 1ª chamada
+    FacadeSingletonController --> RepositorioRestaurantes : recebe na 1ª chamada
+
+    ControladorUsuario --> ValidadorUsuario : valida
+    ControladorUsuario --> RepositorioUsuarios : usa
+    ControladorRestaurante --> ValidadorRestaurante : valida
+    ControladorRestaurante --> RepositorioRestaurantes : usa
+    ControladorRestaurante --> RepositorioUsuarios : verifica vínculos
+
+    RepositorioUsuarios "1" o-- "0..*" Usuario : armazena
+    RepositorioRestaurantes "1" o-- "0..*" Restaurante : armazena
+
+    note for FacadeSingletonController "Construtor direto levanta TypeError. A criação é protegida por trava (thread-safe). Repositórios diferentes após a criação levantam ValueError. reiniciar() serve a testes e à troca de armazenamento."
+    note for Usuario "Detalhado no diagrama de domínio"
+    note for Restaurante "Detalhado no diagrama de domínio"
 ```
 
 ### Persistência
