@@ -37,6 +37,13 @@ class FacadeSingletonController:
             "em vez de instanciar diretamente."
         )
 
+    # copy/deepcopy chamariam o __new__ acima; a cópia de um Singleton é ele mesmo.
+    def __copy__(self) -> "FacadeSingletonController":
+        return self
+
+    def __deepcopy__(self, memo: dict) -> "FacadeSingletonController":
+        return self
+
     @classmethod
     def obter_instancia(
         cls,

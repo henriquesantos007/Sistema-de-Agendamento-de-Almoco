@@ -1,3 +1,4 @@
+import copy
 import threading
 from datetime import time
 
@@ -86,6 +87,11 @@ def test_obter_instancia_deve_devolver_sempre_a_mesma_fachada(repositorios):
 def test_construtor_direto_deve_ser_recusado():
     with pytest.raises(TypeError):
         FacadeSingletonController()
+
+
+def test_copia_da_fachada_deve_ser_a_propria_instancia(fachada):
+    assert copy.copy(fachada) is fachada
+    assert copy.deepcopy(fachada) is fachada
 
 
 def test_primeira_chamada_sem_repositorios_deve_falhar():
