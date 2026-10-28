@@ -4,7 +4,6 @@ from datetime import time
 from source.aplicacao.fachada import FacadeSingletonController
 from source.aplicacao.restaurantes import (
     DadosRestauranteInvalidos,
-    RestauranteNaoEncontrado,
     RestauranteVinculado,
 )
 from source.aplicacao.usuarios import DadosUsuario, DadosUsuarioInvalidos
@@ -69,9 +68,11 @@ def tentar_cadastrar_restaurante(fachada: FacadeSingletonController, dados: Dado
 
 def tentar_remover_restaurante(fachada: FacadeSingletonController, restaurante_id: int) -> None:
     try:
-        removido = fachada.remover_restaurante(restaurante_id)
-        print(f"Restaurante {restaurante_id} removido: {removido}")
-    except (RestauranteNaoEncontrado, RestauranteVinculado) as erro:
+        if fachada.remover_restaurante(restaurante_id):
+            print(f"Restaurante {restaurante_id} removido.")
+        else:
+            print(f"Remoção recusada: restaurante {restaurante_id} não encontrado.")
+    except RestauranteVinculado as erro:
         print(f"Remoção recusada: {erro}")
     except ERROS_DE_PERSISTENCIA as erro:
         print(f"Falha de persistência ao remover o restaurante: {erro}")
