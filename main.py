@@ -7,16 +7,13 @@ from source.aplicacao.restaurantes import (
     RestauranteVinculado,
 )
 from source.aplicacao.usuarios import DadosUsuario, DadosUsuarioInvalidos
+from source.dominio.excecoes import ErroPersistenciaBase
 from source.dominio.restaurantes import DadosRestaurante
-from source.dominio.restaurantes import ErroPersistencia as ErroPersistenciaRestaurantes
-from source.dominio.usuarios import ErroPersistencia
 from source.infraestrutura.persistencia.fabrica_repositorio import (
     ARMAZENAMENTOS,
     criar_repositorio_restaurantes,
     criar_repositorio_usuarios,
 )
-
-ERROS_DE_PERSISTENCIA = (ErroPersistencia, ErroPersistenciaRestaurantes)
 
 
 def ler_argumentos() -> argparse.Namespace:
@@ -48,7 +45,7 @@ def tentar_cadastrar_usuario(fachada: FacadeSingletonController, dados: DadosUsu
         print(f"Cadastro de '{dados.login}' recusado:")
         for mensagem in erro.erros:
             print(f"  - {mensagem}")
-    except ERROS_DE_PERSISTENCIA as erro:
+    except ErroPersistenciaBase as erro:
         print(f"Falha de persistência ao cadastrar '{dados.login}': {erro}")
 
 
@@ -61,7 +58,7 @@ def tentar_cadastrar_restaurante(fachada: FacadeSingletonController, dados: Dado
         print(f"Cadastro de restaurante '{dados.nome}' recusado:")
         for mensagem in erro.erros:
             print(f"  - {mensagem}")
-    except ERROS_DE_PERSISTENCIA as erro:
+    except ErroPersistenciaBase as erro:
         print(f"Falha de persistência ao cadastrar '{dados.nome}': {erro}")
     return None
 
@@ -74,7 +71,7 @@ def tentar_remover_restaurante(fachada: FacadeSingletonController, restaurante_i
             print(f"Remoção recusada: restaurante {restaurante_id} não encontrado.")
     except RestauranteVinculado as erro:
         print(f"Remoção recusada: {erro}")
-    except ERROS_DE_PERSISTENCIA as erro:
+    except ErroPersistenciaBase as erro:
         print(f"Falha de persistência ao remover o restaurante: {erro}")
 
 
@@ -124,7 +121,7 @@ def exibir_relatorio_final(fachada: FacadeSingletonController) -> None:
     try:
         usuarios = fachada.listar_usuarios()
         restaurantes = fachada.listar_restaurantes()
-    except ERROS_DE_PERSISTENCIA as erro:
+    except ErroPersistenciaBase as erro:
         print(f"Falha de persistência ao listar: {erro}")
         return
 
@@ -152,7 +149,7 @@ def main():
                 argumentos.armazenamento, argumentos.caminho_restaurantes
             ),
         )
-    except ERROS_DE_PERSISTENCIA as erro:
+    except ErroPersistenciaBase as erro:
         print(f"Não foi possível iniciar o armazenamento: {erro}")
         return
 

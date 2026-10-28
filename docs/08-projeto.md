@@ -533,7 +533,7 @@ classDiagram
     FabricaRepositorio ..> RepositorioRestaurantesArquivo : cria
     RepositorioUsuariosArquivo ..> ErroPersistencia : lança
 
-    note for ErroPersistencia "Herda de Exception. Encapsula IOError e falhas de serialização; a causa original fica em __cause__."
+    note for ErroPersistencia "Herda de ErroPersistenciaBase (source/dominio/excecoes.py), base comum às ErroPersistencia de usuários e de restaurantes. Encapsula IOError e falhas de serialização; a causa original fica em __cause__."
     note for RepositorioUsuariosArquivo "Serializa com pickle em arquivo binário. A gravação é atômica (arquivo temporário e troca), e a memória é revertida se falhar."
     note for FabricaRepositorio "Módulo fabrica_repositorio.py, composto por funções sem instanciação. Opção: memoria (padrão) ou arquivo."
     note for Usuario "Detalhado no diagrama de domínio"
