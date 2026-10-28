@@ -363,7 +363,7 @@ O `FacadeSingletonController` reúne o `ControladorUsuario` e o `ControladorRest
 
 A instância é obtida por `obterInstancia`. Na primeira chamada, recebe os repositórios de usuários e de restaurantes, que são as abstrações do domínio escolhidas pela fábrica no início da execução. As chamadas seguintes devolvem a mesma instância, e o construtor direto é recusado. A validação para impedir a alteração de repositórios após a inicialização foi extraída para o método privado `validarRepositoriosInalterados` visando manter o Princípio de Responsabilidade Única.
 
-O método `contarTotralEntidades` soma os usuários e os restaurantes cadastrados, e `obterContagemPorEntidade` detalha a contagem de cada tipo utilizando constantes estáticas (`CHAVE_USUARIOS`, `CHAVE_RESTAURANTES`) para evitar strings mágicas. Para isso, `RepositorioUsuarios` ganhou `contar()`, como `RepositorioRestaurantes` já tinha, e os dois controladores o expõem (ADR-0008).
+O método `contarTotalEntidades` soma os usuários e os restaurantes cadastrados, e `obterContagemPorEntidade` detalha a contagem de cada tipo utilizando constantes estáticas (`CHAVE_USUARIOS`, `CHAVE_RESTAURANTES`) para evitar strings mágicas. Para isso, `RepositorioUsuarios` ganhou `contar()`, como `RepositorioRestaurantes` já tinha, e os dois controladores o expõem (ADR-0008).
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
