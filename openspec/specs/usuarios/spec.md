@@ -11,7 +11,7 @@ As mensagens entre aspas são exatamente as exibidas pelo sistema. Quando um cad
 O sistema DEVE cadastrar um usuário quando receber perfil, nome, login, e-mail, senha e telefone válidos, além da matrícula (perfil Estudante) ou do restaurante (perfil Gestor de Restaurante), gerando automaticamente o identificador do usuário.
 
 **Prioridade:** Essencial
-**Casos de uso:** UC05, UC01
+**Casos de uso:** UC05, UC01, UC11
 
 #### Scenario: Cadastro válido gera identificador
 - **GIVEN** não há usuários cadastrados
@@ -38,6 +38,10 @@ O sistema DEVE cadastrar um usuário quando receber perfil, nome, login, e-mail,
 #### Scenario: Gestor sem restaurante
 - **WHEN** o Administrador cadastra um Gestor de Restaurante sem informar o restaurante
 - **THEN** o sistema recusa o cadastro informando "restaurante e obrigatorio para gestor"
+
+#### Scenario: Gestor referencia restaurante inexistente
+- **WHEN** o Administrador cadastra um Gestor de Restaurante com um identificador de restaurante que não está cadastrado
+- **THEN** o sistema recusa o cadastro informando "restaurante nao encontrado"
 
 ### Requirement: RF02 — Regras de login
 O sistema DEVE aceitar apenas logins não vazios, com no máximo 12 caracteres e sem números, desconsiderando espaços no início e no fim.
@@ -120,10 +124,10 @@ O sistema DEVE listar todos os usuários cadastrados, exibindo para cada um o id
 - **THEN** o sistema exibe 0 usuários
 
 ### Requirement: RF05 — Escolher o mecanismo de armazenamento
-O sistema DEVE permitir escolher, no início da execução, se os usuários são armazenados em memória (padrão) ou em arquivo binário.
+O sistema DEVE permitir escolher, no início da execução, se os usuários e os restaurantes são armazenados em memória (padrão) ou em arquivo binário, com um arquivo para cada entidade.
 
 **Prioridade:** Essencial
-**Casos de uso:** UC05, UC06
+**Casos de uso:** UC05, UC06, UC12, UC14
 
 #### Scenario: Armazenamento padrão em memória
 - **WHEN** o sistema é iniciado com `python main.py`, sem a opção `--armazenamento`
@@ -134,6 +138,15 @@ O sistema DEVE permitir escolher, no início da execução, se os usuários são
 - **GIVEN** o sistema foi iniciado com `--armazenamento arquivo` e 1 usuário foi cadastrado
 - **WHEN** o sistema é iniciado de novo com `--armazenamento arquivo`
 - **THEN** a listagem exibe o mesmo usuário, com o mesmo id, lido de "dados/usuarios.bin"
+
+#### Scenario: Armazenamento em arquivo preserva os restaurantes
+- **GIVEN** o sistema foi iniciado com `--armazenamento arquivo` e 1 restaurante foi cadastrado
+- **WHEN** o sistema é iniciado de novo com `--armazenamento arquivo`
+- **THEN** a listagem de restaurantes exibe o mesmo restaurante, com o mesmo id, lido de "dados/restaurantes.bin"
+
+#### Scenario: Caminhos dos arquivos informados na execução
+- **WHEN** o sistema é iniciado com `--armazenamento arquivo --caminho dados/u.bin --caminho-restaurantes dados/r.bin`
+- **THEN** os usuários são gravados em "dados/u.bin" e os restaurantes em "dados/r.bin"
 
 #### Scenario: Mecanismo inexistente
 - **WHEN** o sistema é iniciado com `--armazenamento xml`

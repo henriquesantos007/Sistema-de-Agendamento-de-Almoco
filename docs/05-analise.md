@@ -270,7 +270,7 @@ classDiagram
     Estudante "1" -- "0..*" Notificacao
 ```
 
-> Os atributos e métodos das entidades estão detalhados em [diagrama-de-classes.md](diagrama-de-classes.md).
+> Os atributos e métodos das entidades estão detalhados em [08-projeto.md](08-projeto.md).
 
 ### Colaboração: Informar Indisponibilidade no Dia
 

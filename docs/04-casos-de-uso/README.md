@@ -20,6 +20,8 @@ Perfis de usuário do sistema:
 ## 1. Gerenciamento de Usuários (Laboratório 1)
 
 Casos de uso marcados com ⭐ fazem parte da **Sprint 1** (adição e listagem de usuários).
+A descrição completa de **UC05** está em
+[casos de uso detalhados](./detalhados.md).
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -74,7 +76,59 @@ flowchart LR
 
 ---
 
-## 2. Visão Geral do Sistema
+## 2. Gerenciamento de Restaurantes (CRUD)
+
+O Administrador mantém os restaurantes disponíveis no sistema. O cadastro usa os dados definidos para `Restaurante` em [08-projeto.md](../08-projeto.md): nome, descrição, localização, telefone e horário limite para agendamento. O sistema gera o identificador e a data de cadastro, e inicia o restaurante com status `ATIVO`.
+
+Como foi dito anteriomente, As descrições completas de **UC12** e **UC16** estão em
+[casos de uso detalhados](./detalhados.md).
+
+Casos de uso marcados com ⭐ fazem parte da **Sprint 3** (CRUD de restaurantes e resumo de entidades pela fachada).
+
+```mermaid
+%%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
+flowchart LR
+    admin["🛡️ Administrador"]
+
+    subgraph sistema["Sistema de Agendamento de Almoços — Gerenciamento de Restaurantes"]
+        UC12(["⭐ Cadastrar Restaurante"])
+        UC13(["⭐ Consultar Restaurante"])
+        UC14(["⭐ Listar Restaurantes"])
+        UC15(["⭐ Atualizar Restaurante"])
+        UC16(["⭐ Remover Restaurante"])
+        UC17(["⭐ Consultar Resumo de Entidades"])
+        UC18(["Validar Dados do Restaurante"])
+        UC19(["Verificar Gestores Vinculados"])
+    end
+
+    admin --> UC12
+    admin --> UC13
+    admin --> UC14
+    admin --> UC15
+    admin --> UC16
+    admin --> UC17
+
+    UC12 -. "«include»" .-> UC18
+    UC15 -. "«include»" .-> UC18
+    UC16 -. "«include»" .-> UC19
+```
+
+| Caso de uso | Regra | Requisito |
+|-------------|-------|-----------|
+| ⭐ **UC12 Cadastrar Restaurante** | Administrador informa nome, localização, telefone e horário limite (obrigatórios) e, opcionalmente, a descrição. O sistema gera o id e a data de cadastro e inicia o restaurante como `ATIVO`. | RF07 |
+| ⭐ **UC13 Consultar Restaurante** | Administrador consulta um restaurante pelo identificador. | RF08 |
+| ⭐ **UC14 Listar Restaurantes** | Administrador visualiza todos os restaurantes, na ordem de cadastro. | RF09 |
+| ⭐ **UC15 Atualizar Restaurante** | Administrador altera os dados do restaurante, sem modificar o identificador nem a data de cadastro. | RF10 |
+| ⭐ **UC16 Remover Restaurante** | A remoção é recusada enquanto houver um `GestorRestaurante` vinculado ao restaurante (UC19). O gestor deve ser desvinculado antes. | RF11 |
+| ⭐ **UC17 Consultar Resumo de Entidades** | Administrador vê a quantidade de usuários, de restaurantes e o total de entidades cadastradas. | RF12 |
+| **UC18 Validar Dados do Restaurante** | Verifica os campos obrigatórios e o horário limite, no cadastro e na atualização. | RF07, RF10 |
+| **UC19 Verificar Gestores Vinculados** | Antes de remover, verifica se algum `GestorRestaurante` aponta para o restaurante. | RF11 |
+
+Cada `GestorRestaurante` deve referenciar um restaurante existente. A associação é validada ao cadastrar o gestor (UC11, RF01), evitando referências a restaurantes inexistentes.
+
+---
+
+## 3. Visão Geral do Sistema
 
 A principal regra de negócio está no fluxo de agendamento: **o estudante só agenda para datas cobertas por um cardápio publicado** (diário ou semanal), e o restaurante pode **informar indisponibilidade no próprio dia**, o que cancela os agendamentos afetados e notifica os estudantes. 
 
@@ -89,8 +143,10 @@ flowchart LR
     subgraph sistema["Sistema de Agendamento de Almoços"]
 
         subgraph acesso["Acesso"]
-            UC_Cadastro(["Cadastrar-se"])
-            UC_Login(["Autenticar-se"])
+            UC_Cadastro(["Cadastrar-se como Estudante (UC01)"])
+            UC_Login(["Autenticar-se (UC02)"])
+            UC_EditarPerfil(["Editar Perfil (UC03)"])
+            UC_AlterarSenha(["Alterar Senha (UC04)"])
         end
 
         subgraph estudanteUC["Estudante"]
@@ -121,9 +177,22 @@ flowchart LR
         end
 
         subgraph adminUC["Administrador"]
-            UC_Usuarios(["Gerenciar Usuários"])
-            UC_Restaurantes(["Gerenciar Restaurantes"])
             UC_Relatorios(["Consultar Relatórios"])
+            UC_CadastrarUsuario(["Cadastrar Usuário (UC05)"])
+            UC_ListarUsuarios(["Listar Usuários (UC06)"])
+            UC_FiltrarUsuarios(["Filtrar Usuários (UC07)"])
+            UC_EditarUsuario(["Editar Usuário (UC08)"])
+            UC_AtivarDesativar(["Ativar/Desativar Usuário (UC09)"])
+            UC_ValidarUsuario(["Validar Dados do Usuário (UC10)"])
+            UC_VincularGestor(["Vincular Gestor a Restaurante (UC11)"])
+            UC12(["Cadastrar Restaurante (UC12)"])
+            UC13(["Consultar Restaurante (UC13)"])
+            UC14(["Listar Restaurantes (UC14)"])
+            UC15(["Atualizar Restaurante (UC15)"])
+            UC16(["Remover Restaurante (UC16)"])
+            UC17(["Consultar Resumo de Entidades (UC17)"])
+            UC18(["Validar Dados do Restaurante (UC18)"])
+            UC19(["Verificar Gestores Vinculados (UC19)"])
         end
 
         subgraph pagamentoUC["Pagamento"]
@@ -135,6 +204,8 @@ flowchart LR
     %% Estudante
     estudante --> UC_Cadastro
     estudante --> UC_Login
+    estudante --> UC_EditarPerfil
+    estudante --> UC_AlterarSenha
     estudante --> UC_ConsultarCardapio
     estudante --> UC_Agendar
     estudante --> UC_Acompanhar
@@ -149,6 +220,8 @@ flowchart LR
 
     %% Gestor de Restaurante
     gestor --> UC_Login
+    gestor --> UC_EditarPerfil
+    gestor --> UC_AlterarSenha
     gestor --> UC_DadosRest
     gestor --> UC_Pratos
     gestor --> UC_Publicar
@@ -164,9 +237,27 @@ flowchart LR
 
     %% Administrador
     admin --> UC_Login
-    admin --> UC_Usuarios
-    admin --> UC_Restaurantes
     admin --> UC_Relatorios
+    admin --> UC_CadastrarUsuario
+    admin --> UC_ListarUsuarios
+    admin --> UC_EditarUsuario
+    admin --> UC_AtivarDesativar
+    admin --> UC12
+    admin --> UC13
+    admin --> UC14
+    admin --> UC15
+    admin --> UC16
+    admin --> UC17
+
+    UC_CadastrarUsuario -. "«include»" .-> UC_ValidarUsuario
+    UC_EditarUsuario -. "«include»" .-> UC_ValidarUsuario
+    UC_FiltrarUsuarios -. "«extend»" .-> UC_ListarUsuarios
+    UC_AtivarDesativar -. "«extend»" .-> UC_ListarUsuarios
+    UC_VincularGestor -. "«extend»<br/>(perfil = Gestor)" .-> UC_CadastrarUsuario
+    UC_Cadastro -. "«include»" .-> UC_ValidarUsuario
+    UC12 -. "«include»" .-> UC18
+    UC15 -. "«include»" .-> UC18
+    UC16 -. "«include»" .-> UC19
 
     %% Pagamento
     UC_Pagar -. "«include»<br/>(PIX ou cartão)" .-> UC_Processar
@@ -175,6 +266,11 @@ flowchart LR
     UC_Processar --> gateway
     UC_Estornar --> gateway
 ```
+
+O diagrama inclui os casos especializados de cadastro, consulta, listagem,
+atualização, remoção, validação e resumo, além dos fluxos de estudante,
+gestor, pagamento e notificações. Os diagramas de usuários e restaurantes
+acima detalham seus respectivos subconjuntos.
 
 ### Descrição dos casos de uso ligados às regras de agendamento
 
