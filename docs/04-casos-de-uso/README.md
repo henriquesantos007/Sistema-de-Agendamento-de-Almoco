@@ -20,6 +20,8 @@ Perfis de usuário do sistema:
 ## 1. Gerenciamento de Usuários (Laboratório 1)
 
 Casos de uso marcados com ⭐ fazem parte da **Sprint 1** (adição e listagem de usuários).
+As descrições completas de **UC05**, **UC12** e **UC16** estão em
+[casos de uso detalhados](./detalhados.md).
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -170,9 +172,22 @@ flowchart LR
         end
 
         subgraph adminUC["Administrador"]
-            UC_Usuarios(["Gerenciar Usuários"])
-            UC_Restaurantes(["Gerenciar Restaurantes"])
             UC_Relatorios(["Consultar Relatórios"])
+            UC_CadastrarUsuario(["Cadastrar Usuário (UC05)"])
+            UC_ListarUsuarios(["Listar Usuários (UC06)"])
+            UC_FiltrarUsuarios(["Filtrar Usuários (UC07)"])
+            UC_EditarUsuario(["Editar Usuário (UC08)"])
+            UC_AtivarDesativar(["Ativar/Desativar Usuário (UC09)"])
+            UC_ValidarUsuario(["Validar Dados do Usuário (UC10)"])
+            UC_VincularGestor(["Vincular Gestor a Restaurante (UC11)"])
+            UC12(["Cadastrar Restaurante"])
+            UC13(["Consultar Restaurante"])
+            UC14(["Listar Restaurantes"])
+            UC15(["Atualizar Restaurante"])
+            UC16(["Remover Restaurante"])
+            UC17(["Consultar Resumo de Entidades"])
+            UC18(["Validar Dados do Restaurante"])
+            UC19(["Verificar Gestores Vinculados"])
         end
 
         subgraph pagamentoUC["Pagamento"]
@@ -213,9 +228,25 @@ flowchart LR
 
     %% Administrador
     admin --> UC_Login
-    admin --> UC_Usuarios
-    admin --> UC_Restaurantes
     admin --> UC_Relatorios
+    admin --> UC_CadastrarUsuario
+    admin --> UC_ListarUsuarios
+    admin --> UC_EditarUsuario
+    admin --> UC_AtivarDesativar
+    admin --> UC12
+    admin --> UC13
+    admin --> UC14
+    admin --> UC15
+    admin --> UC16
+    admin --> UC17
+
+    UC_CadastrarUsuario -. "«include»" .-> UC_ValidarUsuario
+    UC_EditarUsuario -. "«include»" .-> UC_ValidarUsuario
+    UC_FiltrarUsuarios -. "«extend»" .-> UC_ListarUsuarios
+    UC_VincularGestor -. "«extend»<br/>(perfil = Gestor)" .-> UC_CadastrarUsuario
+    UC12 -. "«include»" .-> UC18
+    UC15 -. "«include»" .-> UC18
+    UC16 -. "«include»" .-> UC19
 
     %% Pagamento
     UC_Pagar -. "«include»<br/>(PIX ou cartão)" .-> UC_Processar
@@ -224,6 +255,11 @@ flowchart LR
     UC_Processar --> gateway
     UC_Estornar --> gateway
 ```
+
+O diagrama inclui os casos especializados de cadastro, consulta, listagem,
+atualização, remoção, validação e resumo, além dos fluxos de estudante,
+gestor, pagamento e notificações. Os diagramas de usuários e restaurantes
+acima detalham seus respectivos subconjuntos.
 
 ### Descrição dos casos de uso ligados às regras de agendamento
 
