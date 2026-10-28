@@ -78,14 +78,48 @@ flowchart LR
 
 O Administrador mantém os restaurantes disponíveis no sistema. O cadastro usa os dados definidos para `Restaurante` em [08-projeto.md](../08-projeto.md): nome, descrição, localização, telefone e horário limite para agendamento. O sistema gera o identificador e a data de cadastro, e inicia o restaurante com status `ATIVO`.
 
-| Operação | Regra |
-|----------|-------|
-| **Cadastrar** | Administrador informa os dados do restaurante; nome, localização, telefone e horário limite são obrigatórios. |
-| **Consultar/Listar** | Administrador pode consultar um restaurante pelo identificador ou listar os restaurantes cadastrados. |
-| **Atualizar** | Administrador pode alterar os dados do restaurante, sem modificar seu identificador nem sua data de cadastro. |
-| **Remover** | A remoção é recusada enquanto houver um `GestorRestaurante` vinculado ao restaurante. O gestor deve ser desvinculado antes. |
+Casos de uso marcados com ⭐ fazem parte da **Sprint 3** (CRUD de restaurantes e resumo de entidades pela fachada).
 
-Cada `GestorRestaurante` deve referenciar um restaurante existente. A associação é validada ao cadastrar ou atualizar o gestor, evitando referências a restaurantes inexistentes.
+```mermaid
+%%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
+flowchart LR
+    admin["🛡️ Administrador"]
+
+    subgraph sistema["Sistema de Agendamento de Almoços — Gerenciamento de Restaurantes"]
+        UC12(["⭐ Cadastrar Restaurante"])
+        UC13(["⭐ Consultar Restaurante"])
+        UC14(["⭐ Listar Restaurantes"])
+        UC15(["⭐ Atualizar Restaurante"])
+        UC16(["⭐ Remover Restaurante"])
+        UC17(["⭐ Consultar Resumo de Entidades"])
+        UC18(["Validar Dados do Restaurante"])
+        UC19(["Verificar Gestores Vinculados"])
+    end
+
+    admin --> UC12
+    admin --> UC13
+    admin --> UC14
+    admin --> UC15
+    admin --> UC16
+    admin --> UC17
+
+    UC12 -. "«include»" .-> UC18
+    UC15 -. "«include»" .-> UC18
+    UC16 -. "«include»" .-> UC19
+```
+
+| Caso de uso | Regra | Requisito |
+|-------------|-------|-----------|
+| ⭐ **UC12 Cadastrar Restaurante** | Administrador informa nome, localização, telefone e horário limite (obrigatórios) e, opcionalmente, a descrição. O sistema gera o id e a data de cadastro e inicia o restaurante como `ATIVO`. | RF07 |
+| ⭐ **UC13 Consultar Restaurante** | Administrador consulta um restaurante pelo identificador. | RF08 |
+| ⭐ **UC14 Listar Restaurantes** | Administrador visualiza todos os restaurantes, na ordem de cadastro. | RF09 |
+| ⭐ **UC15 Atualizar Restaurante** | Administrador altera os dados do restaurante, sem modificar o identificador nem a data de cadastro. | RF10 |
+| ⭐ **UC16 Remover Restaurante** | A remoção é recusada enquanto houver um `GestorRestaurante` vinculado ao restaurante (UC19). O gestor deve ser desvinculado antes. | RF11 |
+| ⭐ **UC17 Consultar Resumo de Entidades** | Administrador vê a quantidade de usuários, de restaurantes e o total de entidades cadastradas. | RF12 |
+| **UC18 Validar Dados do Restaurante** | Verifica os campos obrigatórios e o horário limite, no cadastro e na atualização. | RF07, RF10 |
+| **UC19 Verificar Gestores Vinculados** | Antes de remover, verifica se algum `GestorRestaurante` aponta para o restaurante. | RF11 |
+
+Cada `GestorRestaurante` deve referenciar um restaurante existente. A associação é validada ao cadastrar o gestor (UC11, RF01), evitando referências a restaurantes inexistentes.
 
 ---
 
