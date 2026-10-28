@@ -12,7 +12,7 @@ regras de [usuários](../../openspec/specs/usuarios/spec.md) e
 |---|---|
 | Ator principal | Administrador |
 | Objetivo | Registrar uma conta de usuário com um perfil válido. |
-| Precondições | O Administrador está autenticado. Para o perfil Gestor de Restaurante, o restaurante a vincular já está cadastrado. |
+| Precondições | O Administrador está autenticado. |
 | Pós-condições | O usuário validado é persistido com identificador gerado; sua senha fica armazenada somente como hash. |
 
 ### Fluxo principal
@@ -22,7 +22,7 @@ regras de [usuários](../../openspec/specs/usuarios/spec.md) e
 3. O Administrador informa os dados e, conforme o perfil, a matrícula do Estudante ou o restaurante do Gestor.
 4. O Administrador confirma o cadastro.
 5. O sistema valida os campos, as regras de login e senha, os dados únicos e o vínculo do Gestor.
-6. O sistema normaliza os campos textuais, gera o hash da senha e cria o usuário com identificador.
+6. O sistema normaliza o perfil (remove espaços externos e converte para minúsculas), remove espaços externos do login, remove caracteres não numéricos do telefone, gera o hash da senha e cria o usuário com identificador. Nome, e-mail e matrícula são mantidos como informados.
 7. O sistema persiste o usuário e confirma o cadastro, sem exibir a senha nem seu hash.
 
 ### Fluxos alternativos e de exceção
@@ -48,13 +48,13 @@ regras de [usuários](../../openspec/specs/usuarios/spec.md) e
 3. O Administrador preenche nome, localização, telefone e horário limite; descrição é opcional.
 4. O Administrador confirma os dados.
 5. O sistema valida os campos obrigatórios e o horário, reunindo todos os erros encontrados.
-6. O sistema remove espaços excedentes das pontas dos textos, cria o restaurante com ID e data gerados e status `ATIVO`.
-7. O sistema persiste o restaurante e confirma o cadastro.
+6. O sistema remove espaços excedentes das pontas dos textos e cria o restaurante sem ID, com data de cadastro gerada e status `ATIVO`.
+7. O repositório atribui o ID e persiste o restaurante; em seguida, o sistema confirma o cadastro.
 
 ### Fluxos alternativos e de exceção
 
 - **5a. Dados inválidos:** o sistema informa todos os motivos e não altera a quantidade de restaurantes.
-- **7a. Falha de persistência:** o sistema informa a falha e mantém o arquivo e a coleção anteriores intactos.
+- **7a. Falha de persistência:** o sistema informa a falha, mantém o arquivo e a coleção anteriores intactos e reverte o ID do restaurante para `None`.
 
 ## UC16 — Remover Restaurante
 

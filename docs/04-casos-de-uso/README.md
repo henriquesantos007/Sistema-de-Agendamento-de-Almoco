@@ -20,7 +20,7 @@ Perfis de usuário do sistema:
 ## 1. Gerenciamento de Usuários (Laboratório 1)
 
 Casos de uso marcados com ⭐ fazem parte da **Sprint 1** (adição e listagem de usuários).
-As descrições completas de **UC05**, **UC12** e **UC16** estão em
+A descrição completa de **UC05** está em
 [casos de uso detalhados](./detalhados.md).
 
 ```mermaid
@@ -79,6 +79,9 @@ flowchart LR
 ## 2. Gerenciamento de Restaurantes (CRUD)
 
 O Administrador mantém os restaurantes disponíveis no sistema. O cadastro usa os dados definidos para `Restaurante` em [08-projeto.md](../08-projeto.md): nome, descrição, localização, telefone e horário limite para agendamento. O sistema gera o identificador e a data de cadastro, e inicia o restaurante com status `ATIVO`.
+
+Como foi dito anteriomente, As descrições completas de **UC12** e **UC16** estão em
+[casos de uso detalhados](./detalhados.md).
 
 Casos de uso marcados com ⭐ fazem parte da **Sprint 3** (CRUD de restaurantes e resumo de entidades pela fachada).
 
@@ -249,7 +252,9 @@ flowchart LR
     UC_CadastrarUsuario -. "«include»" .-> UC_ValidarUsuario
     UC_EditarUsuario -. "«include»" .-> UC_ValidarUsuario
     UC_FiltrarUsuarios -. "«extend»" .-> UC_ListarUsuarios
+    UC_AtivarDesativar -. "«extend»" .-> UC_ListarUsuarios
     UC_VincularGestor -. "«extend»<br/>(perfil = Gestor)" .-> UC_CadastrarUsuario
+    UC_Cadastro -. "«include»" .-> UC_ValidarUsuario
     UC12 -. "«include»" .-> UC18
     UC15 -. "«include»" .-> UC18
     UC16 -. "«include»" .-> UC19
