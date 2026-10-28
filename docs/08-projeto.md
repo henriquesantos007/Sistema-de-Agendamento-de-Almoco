@@ -187,7 +187,7 @@ classDiagram
 
 ## Cadastro de usuários: validação e persistência
 
-Esta seção mostra as classes que implementam o cadastro de usuários, em dois diagramas. Os nomes seguem o código-fonte, e os membros usam a notação camelCase dos demais diagramas. Entram como **novas no Laboratório 2** o `ValidadorLogin`, o `ValidadorSenha`, o `PoliticaCredenciais`, as exceções (`ErroValidacaoCampo`, `LoginInvalido`, `SenhaInvalida` e `ErroPersistencia`), o `RepositorioUsuariosArquivo` e a `FabricaRepositorio`. As demais classes já existiam e aparecem como contexto.
+Esta seção mostra as classes que implementam o cadastro de usuários, em dois diagramas. Os nomes seguem o código-fonte e usam snake_case para métodos e parâmetros. Entram como **novas no Laboratório 2** o `ValidadorLogin`, o `ValidadorSenha`, o `PoliticaCredenciais`, as exceções (`ErroValidacaoCampo`, `LoginInvalido`, `SenhaInvalida` e `ErroPersistencia`), o `RepositorioUsuariosArquivo` e a `FabricaRepositorio`. As demais classes já existiam e aparecem como contexto.
 
 No Sprint 3, a subseção **Fachada e Singleton dos controladores** mostra o `FacadeSingletonController`, ponto único de acesso aos controladores de usuários e de restaurantes.
 
@@ -195,7 +195,7 @@ No Sprint 3, a subseção **Fachada e Singleton dos controladores** mostra o `Fa
 
 O `ControladorUsuario` pede ao `ValidadorUsuario` que valide os `DadosUsuario`. O `ValidadorUsuario` compõe vários validadores independentes (padrão *Composite*) e reúne as mensagens de todos. Se houver erros, o controlador lança `DadosUsuarioInvalidos`.
 
-As regras de login e senha ficam no `PoliticaCredenciais`, que **lança** `LoginInvalido` ou `SenhaInvalida` com todos os motivos encontrados. `ValidadorLogin` e `ValidadorSenha` **capturam** essas exceções e as convertem em mensagens para o `ValidadorUsuario`. Se o login tiver formato válido, o `ValidadorLogin` ainda consulta o `RepositorioUsuarios` (`existeLogin`) e recusa logins já cadastrados.
+As regras de login e senha ficam no `PoliticaCredenciais`, que **lança** `LoginInvalido` ou `SenhaInvalida` com todos os motivos encontrados. `ValidadorLogin` e `ValidadorSenha` **capturam** essas exceções e as convertem em mensagens para o `ValidadorUsuario`. Se o login tiver formato válido, o `ValidadorLogin` ainda consulta o `RepositorioUsuarios` (`existe_login`) e recusa logins já cadastrados.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -321,10 +321,10 @@ se houver um gestor associado.
 classDiagram
     class ControladorRestaurante {
         +cadastrar(dados: DadosRestaurante) Restaurante
-        +buscarPorId(restauranteId: int) Restaurante
-        +listarTodos() List~Restaurante~
-        +atualizar(restauranteId: int, dados: DadosRestaurante) Restaurante
-        +remover(restauranteId: int) boolean
+        +buscar_por_id(restaurante_id: int) Restaurante
+        +listar_todos() List~Restaurante~
+        +atualizar(restaurante_id: int, dados: DadosRestaurante) Restaurante
+        +remover(restaurante_id: int) boolean
         +contar() int
     }
 
@@ -388,8 +388,9 @@ classDiagram
         -trava: Lock$
         -controladorUsuario: ControladorUsuario
         -controladorRestaurante: ControladorRestaurante
-        +obter_instancia(repositorio_usuarios, repositorio_restaurantes)$
+        +obter_instancia(repositorio_usuarios, repositorio_restaurantes) FacadeSingletonController$
         +reiniciar()$
+        -validar_repositorios_inalterados(repositorio_usuarios, repositorio_restaurantes) None
         +cadastrar_usuario(dados: DadosUsuario) Usuario
         +listar_usuarios() List~Usuario~
         +cadastrar_restaurante(dados: DadosRestaurante) Restaurante
@@ -474,26 +475,26 @@ classDiagram
     class RepositorioUsuarios {
         <<interface>>
         +adicionar(usuario: Usuario) Usuario
-        +listarTodos() List~Usuario~
-        +buscarPorEmail(email: String) Usuario
-        +existeLogin(login: String) boolean
-        +existeMatricula(matricula: String) boolean
-        +existeTelefone(telefone: String) boolean
+        +listar_todos() List~Usuario~
+        +buscar_por_email(email: String) Usuario
+        +existe_login(login: String) boolean
+        +existe_matricula(matricula: String) boolean
+        +existe_telefone(telefone: String) boolean
     }
 
     class RepositorioRestaurantes {
         <<interface>>
         +adicionar(restaurante: Restaurante) Restaurante
-        +buscarPorId(restauranteId: int) Restaurante
-        +listarTodos() List~Restaurante~
+        +buscar_por_id(restaurante_id: int) Restaurante
+        +listar_todos() List~Restaurante~
         +atualizar(restaurante: Restaurante) Restaurante
-        +remover(restauranteId: int) boolean
+        +remover(restaurante_id: int) boolean
         +contar() int
     }
 
     class RepositorioUsuariosMemoria {
         -usuarios: List~Usuario~
-        -proximoId: int
+        -proximo_id: int
     }
 
     class RepositorioUsuariosArquivo {
@@ -505,22 +506,22 @@ classDiagram
 
     class RepositorioRestaurantesMemoria {
         -restaurantes: List~Restaurante~
-        -proximoId: int
+        -proximo_id: int
     }
 
     class RepositorioRestaurantesArquivo {
         -caminho: Path
         +adicionar(restaurante: Restaurante) Restaurante
         +atualizar(restaurante: Restaurante) Restaurante
-        +remover(restauranteId: int) boolean
+        +remover(restaurante_id: int) boolean
         -carregar()
         -salvar()
     }
 
     class FabricaRepositorio {
         <<factory>>
-        +criarRepositorioUsuarios(armazenamento: String, caminho: Path) RepositorioUsuarios
-        +criarRepositorioRestaurantes(armazenamento: String, caminho: Path) RepositorioRestaurantes
+        +criar_repositorio_usuarios(armazenamento: String, caminho: Path) RepositorioUsuarios
+        +criar_repositorio_restaurantes(armazenamento: String, caminho: Path) RepositorioRestaurantes
     }
 
     class ErroPersistencia
