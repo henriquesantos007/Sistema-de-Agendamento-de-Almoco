@@ -142,6 +142,8 @@ flowchart LR
         subgraph acesso["Acesso"]
             UC_Cadastro(["Cadastrar-se"])
             UC_Login(["Autenticar-se"])
+            UC_EditarPerfil(["Editar Perfil (UC03)"])
+            UC_AlterarSenha(["Alterar Senha (UC04)"])
         end
 
         subgraph estudanteUC["Estudante"]
@@ -199,6 +201,8 @@ flowchart LR
     %% Estudante
     estudante --> UC_Cadastro
     estudante --> UC_Login
+    estudante --> UC_EditarPerfil
+    estudante --> UC_AlterarSenha
     estudante --> UC_ConsultarCardapio
     estudante --> UC_Agendar
     estudante --> UC_Acompanhar
@@ -213,6 +217,8 @@ flowchart LR
 
     %% Gestor de Restaurante
     gestor --> UC_Login
+    gestor --> UC_EditarPerfil
+    gestor --> UC_AlterarSenha
     gestor --> UC_DadosRest
     gestor --> UC_Pratos
     gestor --> UC_Publicar
