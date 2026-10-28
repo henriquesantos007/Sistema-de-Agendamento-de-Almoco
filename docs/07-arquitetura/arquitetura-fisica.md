@@ -40,11 +40,12 @@ padrão são `dados/usuarios.bin` e `dados/restaurantes.bin`; `--caminho` e
 de permissão de leitura e gravação no diretório escolhido.
 
 Os repositórios em arquivo gravam primeiro em um arquivo temporário e usam
-substituição atômica do arquivo de destino. Falhas são convertidas em
-`ErroPersistenciaBase`; na inicialização e nas operações do CLI, a aplicação
-apresenta a falha sem expor traceback. Os arquivos usam `pickle` e devem ser
-tratados como dados confiáveis gerados pela própria aplicação, não como entrada
-de terceiros.
+substituição atômica do arquivo de destino. Falhas são convertidas no
+`ErroPersistencia` específico do domínio de usuários ou restaurantes; ambas as
+classes herdam de `ErroPersistenciaBase`, que o `main.py` captura para
+apresentar falhas de inicialização e das operações do CLI sem expor traceback.
+Os arquivos usam `pickle` e devem ser tratados como dados confiáveis gerados
+pela própria aplicação, não como entrada de terceiros.
 
 ## Limites de implantação
 

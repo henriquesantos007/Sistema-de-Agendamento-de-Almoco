@@ -24,6 +24,8 @@ flowchart TB
     subgraph Dominio["Domínio — source/dominio"]
         Usuario["Usuario e perfis"]
         Restaurante["Restaurante"]
+        DadosRestaurante["DadosRestaurante"]
+        Erros["Exceções de domínio"]
         RUsuarios["RepositorioUsuarios<br/>contrato"]
         RRestaurantes["RepositorioRestaurantes<br/>contrato"]
     end
@@ -38,6 +40,8 @@ flowchart TB
     Cliente --> Main
     Main --> Fabrica
     Main --> Facade
+    Main --> DadosRestaurante
+    Main --> Erros
     Facade --> CUsuario
     Facade --> CRestaurante
     CUsuario --> VUsuario
@@ -61,7 +65,7 @@ flowchart TB
 
 | Módulo/camada | Responsabilidades | Dependências permitidas |
 |---|---|---|
-| `main.py` | Ler opções de execução, selecionar repositórios na fábrica, obter a fachada e apresentar o fluxo CLI. | Aplicação e infraestrutura. |
+| `main.py` | Ler opções de execução, selecionar repositórios na fábrica, obter a fachada, construir dados de domínio usados no fluxo CLI e tratar exceções de domínio. | Aplicação, domínio e infraestrutura. |
 | Aplicação | Validar e coordenar casos de uso; a fachada constrói os controladores e os expõe; controladores aplicam regras de aplicação. | Contratos e entidades do domínio. |
 | Domínio | Definir `Usuario`, perfis, `Restaurante`, dados de domínio, exceções e contratos de repositório. | Biblioteca padrão e outros elementos do domínio. |
 | Infraestrutura | Implementar repositórios em memória e arquivo binário e selecionar implementação pela fábrica. | Contratos e entidades do domínio. |
