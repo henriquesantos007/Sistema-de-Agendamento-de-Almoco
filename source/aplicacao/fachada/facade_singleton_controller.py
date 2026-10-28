@@ -43,31 +43,35 @@ class FacadeSingletonController:
         repositorio_usuarios: Optional[RepositorioUsuarios] = None,
         repositorio_restaurantes: Optional[RepositorioRestaurantes] = None,
     ) -> "FacadeSingletonController":
-        if cls._instancia is None:
+        # Copia local: um reiniciar() concorrente não pode zerar a instância
+        # entre a validação e o retorno.
+        instancia = cls._instancia
+        if instancia is None:
             with cls._trava:
                 if cls._instancia is None:
                     cls._instancia = cls._criar(
                         repositorio_usuarios, repositorio_restaurantes
                     )
                     return cls._instancia
+                instancia = cls._instancia
 
-        cls._validar_repositorios_inalterados(repositorio_usuarios, repositorio_restaurantes)
-        return cls._instancia
+        instancia._validar_repositorios_inalterados(
+            repositorio_usuarios, repositorio_restaurantes
+        )
+        return instancia
 
-    @classmethod
     def _validar_repositorios_inalterados(
-        cls,
+        self,
         repositorio_usuarios: Optional[RepositorioUsuarios],
         repositorio_restaurantes: Optional[RepositorioRestaurantes],
     ) -> None:
-        instancia = cls._instancia
         usuarios_alterados = (
             repositorio_usuarios is not None
-            and repositorio_usuarios is not instancia._repositorio_usuarios
+            and repositorio_usuarios is not self._repositorio_usuarios
         )
         restaurantes_alterados = (
             repositorio_restaurantes is not None
-            and repositorio_restaurantes is not instancia._repositorio_restaurantes
+            and repositorio_restaurantes is not self._repositorio_restaurantes
         )
         
         if usuarios_alterados or restaurantes_alterados:

@@ -135,6 +135,22 @@ def test_threads_concorrentes_devem_receber_a_mesma_instancia(repositorios):
     assert len({id(instancia) for instancia in instancias}) == 1
 
 
+def test_reiniciar_concorrente_nao_deve_quebrar_obter_instancia(fachada, monkeypatch):
+    validar_original = FacadeSingletonController._validar_repositorios_inalterados
+
+    def validar_apos_reiniciar(self, *repositorios):
+        FacadeSingletonController.reiniciar()
+        validar_original(self, *repositorios)
+
+    monkeypatch.setattr(
+        FacadeSingletonController,
+        "_validar_repositorios_inalterados",
+        validar_apos_reiniciar,
+    )
+
+    assert FacadeSingletonController.obter_instancia() is fachada
+
+
 # ---- Facade: delegacao aos controladores ----
 
 def test_deve_cadastrar_e_listar_usuarios(fachada):

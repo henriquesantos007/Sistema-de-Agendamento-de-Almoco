@@ -383,7 +383,7 @@ classDiagram
         -controladorUsuario: ControladorUsuario
         -controladorRestaurante: ControladorRestaurante
         +obterInstancia(repositorioUsuarios: RepositorioUsuarios, repositorioRestaurantes: RepositorioRestaurantes) FacadeSingletonController$
-        -validarRepositoriosInalterados(repositorioUsuarios: RepositorioUsuarios, repositorioRestaurantes: RepositorioRestaurantes)$
+        -validarRepositoriosInalterados(repositorioUsuarios: RepositorioUsuarios, repositorioRestaurantes: RepositorioRestaurantes)
         +reiniciar()$
         +cadastrarUsuario(dados: DadosUsuario) Usuario
         +listarUsuarios() List~Usuario~
