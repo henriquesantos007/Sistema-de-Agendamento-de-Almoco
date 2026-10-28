@@ -1,5 +1,7 @@
 from typing import List
 
+from source.dominio.excecoes import ErroPersistenciaBase
+
 
 class ErroValidacaoCampo(ValueError):
     """Base das excecoes de validacao de um campo do usuario.
@@ -23,7 +25,7 @@ class SenhaInvalida(ErroValidacaoCampo):
     campo = "senha"
 
 
-class ErroPersistencia(Exception):
+class ErroPersistencia(ErroPersistenciaBase):
     """Falha ao ler ou gravar usuarios em um mecanismo de persistencia.
 
     Encapsula excecoes tecnicas (IOError, sqlite3.Error, etc.) para que as

@@ -9,10 +9,11 @@ from source.dominio.restaurantes import (
 
 def criar_dados_restaurante(
     nome: str,
+    descricao: str = "Almocos no campus",
 ) -> DadosRestaurante:
     return DadosRestaurante(
         nome=nome,
-        descricao="Almocos no campus",
+        descricao=descricao,
         localizacao="Centro de Informatica",
         telefone="83999990000",
         horario_limite_agendamento=time(10, 0),

@@ -41,6 +41,9 @@ class ControladorRestaurante:
     def listar_todos(self) -> List[Restaurante]:
         return self.repositorio.listar_todos()
 
+    def contar(self) -> int:
+        return self.repositorio.contar()
+
     def atualizar(
         self,
         restaurante_id: int,

@@ -52,3 +52,6 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
             and re.sub(r"\D", "", usuario.telefone) == telefone_normalizado
             for usuario in self._usuarios
         )
+    
+    def contar(self) -> int:
+        return len(self._usuarios)
