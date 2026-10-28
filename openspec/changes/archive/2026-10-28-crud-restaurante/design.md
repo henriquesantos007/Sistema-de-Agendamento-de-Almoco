@@ -26,6 +26,13 @@ expor o resumo de entidades.
   [ADR-0008](../../../../docs/07-arquitetura/adr/0008-fachada-singleton-dos-controladores.md);
   não é necessária uma nova decisão arquitetural.
 
+## Arquivamento
+
+O pacote foi arquivado com
+`openspec archive crud-restaurante --skip-specs --yes`. A opção `--skip-specs`
+evita reaplicar os deltas, que registram requisitos já presentes nas
+especificações canônicas.
+
 ## Alternativas consideradas
 
 - **Duplicar ou renumerar requisitos nas specs canônicas:** rejeitado porque

@@ -1,13 +1,13 @@
 # CRUD de Restaurantes e Resumo de Entidades
 
-## Por quê
+## Why (Por quê)
 
 O CRUD de restaurantes e a fachada única já foram implementados, mas faltava
 manter no OpenSpec um pacote de mudança rastreável junto à documentação dos
 casos de uso, telas e arquitetura. Esta mudança registra os requisitos e a
 decisão arquitetural que fundamentam a entrega.
 
-## O que muda
+## What Changes (O que muda)
 
 - Consolida os requisitos de cadastro, consulta, listagem, atualização e
   remoção de restaurantes, incluindo o vínculo com gestores.
