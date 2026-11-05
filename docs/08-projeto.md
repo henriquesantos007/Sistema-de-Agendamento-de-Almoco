@@ -185,17 +185,35 @@ classDiagram
     note for ItemCardapio "Oferta de um prato em uma data específica; pode ficar INDISPONIVEL só naquele dia"
 ```
 
-## Cadastro de usuários: validação e persistência
+## CRUD de usuários: validação e persistência
 
-Esta seção mostra as classes que implementam o cadastro de usuários, em dois diagramas. Os nomes seguem o código-fonte e usam snake_case para métodos e parâmetros. Entram como **novas no Laboratório 2** o `ValidadorLogin`, o `ValidadorSenha`, o `PoliticaCredenciais`, as exceções (`ErroValidacaoCampo`, `LoginInvalido`, `SenhaInvalida` e `ErroPersistencia`), o `RepositorioUsuariosArquivo` e a `FabricaRepositorio`. As demais classes já existiam e aparecem como contexto.
+Esta seção mostra as classes que implementam cadastro, consulta, atualização
+e remoção de usuários, em dois diagramas. Os nomes seguem o código-fonte e
+usam snake_case para métodos e parâmetros. Entram como **novas no Laboratório
+2** o `ValidadorLogin`, o `ValidadorSenha`, o `PoliticaCredenciais`, as
+exceções (`ErroValidacaoCampo`, `LoginInvalido`, `SenhaInvalida` e
+`ErroPersistencia`), o `RepositorioUsuariosArquivo` e a `FabricaRepositorio`.
+As operações do CRUD foram acrescentadas ao controlador, ao contrato e aos
+repositórios no Sprint 3.
 
 No Sprint 3, a subseção **Fachada e Singleton dos controladores** mostra o `FacadeSingletonController`, ponto único de acesso aos controladores de usuários e de restaurantes.
 
-### Validação do cadastro
+### Validação do cadastro e da atualização
 
-O `ControladorUsuario` pede ao `ValidadorUsuario` que valide os `DadosUsuario`. O `ValidadorUsuario` compõe vários validadores independentes (padrão *Composite*) e reúne as mensagens de todos. Se houver erros, o controlador lança `DadosUsuarioInvalidos`.
+O `ControladorUsuario` pede ao `ValidadorUsuario` que valide os `DadosUsuario`.
+O `ValidadorUsuario` compõe vários validadores independentes (padrão
+*Composite*) e reúne as mensagens de todos. No cadastro, se houver erros, o
+controlador lança `DadosUsuarioInvalidos`; na atualização, a implementação
+atual lança `ValueError` com os motivos reunidos.
 
-As regras de login e senha ficam no `PoliticaCredenciais`, que **lança** `LoginInvalido` ou `SenhaInvalida` com todos os motivos encontrados. `ValidadorLogin` e `ValidadorSenha` **capturam** essas exceções e as convertem em mensagens para o `ValidadorUsuario`. Se o login tiver formato válido, o `ValidadorLogin` ainda consulta o `RepositorioUsuarios` (`existe_login`) e recusa logins já cadastrados.
+As regras de login e senha ficam no `PoliticaCredenciais`, que **lança**
+`LoginInvalido` ou `SenhaInvalida` com todos os motivos encontrados.
+`ValidadorLogin` e `ValidadorSenha` **capturam** essas exceções e as
+convertem em mensagens para o `ValidadorUsuario`. Se o login tiver formato
+válido, o `ValidadorLogin` ainda consulta o `RepositorioUsuarios`
+(`existe_login`) e recusa logins já cadastrados. Na atualização, os validadores
+recebem `id_ignorado` para não tratar como duplicados os dados únicos do
+próprio usuário.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -206,7 +224,12 @@ classDiagram
         -repositorio: RepositorioUsuarios
         -validadorUsuario: ValidadorUsuario
         +cadastrar(dados: DadosUsuario) Usuario
-        -criarUsuario(dados: DadosUsuario) Usuario
+        +listar_todos() List~Usuario~
+        +contar() int
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(id_usuario: int, dados_atualizados: DadosUsuario) Usuario
+        +remover(id_usuario: int)
+        -_criar_usuario(dados: DadosUsuario) Usuario
     }
 
     class DadosUsuario {
@@ -227,12 +250,12 @@ classDiagram
 
     class ValidadorUsuario {
         -validadores: List~ValidadorUsuarioBase~
-        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios) List~String~
+        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios, id_ignorado: Optional~int~) List~String~
     }
 
     class ValidadorUsuarioBase {
         <<abstract>>
-        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios) List~String~
+        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios, id_ignorado: Optional~int~) List~String~
     }
 
     class ValidadorDadosObrigatorios
@@ -263,6 +286,12 @@ classDiagram
 
     class RepositorioUsuarios {
         <<interface>>
+        +adicionar(usuario: Usuario) Usuario
+        +listar_todos() List~Usuario~
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(usuario_atualizado: Usuario) Usuario
+        +remover(id_usuario: int)
+        +contar() int
     }
 
     ControladorUsuario --> ValidadorUsuario : usa
@@ -333,7 +362,7 @@ classDiagram
     }
 
     class ValidadorGestorRestaurante {
-        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios) List~String~
+        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios, id_ignorado: Optional~int~) List~String~
     }
 
     class ControladorUsuario
@@ -393,6 +422,9 @@ classDiagram
         -validar_repositorios_inalterados(repositorio_usuarios, repositorio_restaurantes) None
         +cadastrar_usuario(dados: DadosUsuario) Usuario
         +listar_usuarios() List~Usuario~
+        +buscar_usuario(usuario_id: int) Usuario
+        +atualizar_usuario(usuario_id: int, dados: DadosUsuario) Usuario
+        +remover_usuario(usuario_id: int)
         +cadastrar_restaurante(dados: DadosRestaurante) Restaurante
         +buscar_restaurante(restaurante_id: int) Restaurante
         +listar_restaurantes() List~Restaurante~
@@ -407,6 +439,9 @@ classDiagram
     class ControladorUsuario {
         +cadastrar(dados: DadosUsuario) Usuario
         +listar_todos() List~Usuario~
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(id_usuario: int, dados_atualizados: DadosUsuario) Usuario
+        +remover(id_usuario: int)
         +contar() int
     }
 
@@ -424,6 +459,9 @@ classDiagram
 
     class RepositorioUsuarios {
         <<interface>>
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(usuario_atualizado: Usuario) Usuario
+        +remover(id_usuario: int)
         +contar() int
     }
 
@@ -463,7 +501,7 @@ classDiagram
     note for Restaurante "Detalhado no diagrama de domínio"
 ```
 
-### Persistência
+### Persistência e contrato do repositório
 
 `RepositorioUsuarios` e `RepositorioRestaurantes` são as abstrações definidas no domínio, das quais a aplicação depende. As fábricas oferecem repositórios em memória ou em arquivo binário para cada entidade. `RepositorioUsuariosArquivo` e `RepositorioRestaurantesArquivo` carregam o arquivo ao iniciar e usam escrita atômica para suas alterações. Falhas de arquivo e de serialização são encapsuladas em `ErroPersistencia` no domínio correspondente, sem expor detalhes de infraestrutura às camadas superiores. Os arquivos padrão são `dados/usuarios.bin` e `dados/restaurantes.bin`.
 
@@ -477,9 +515,13 @@ classDiagram
         +adicionar(usuario: Usuario) Usuario
         +listar_todos() List~Usuario~
         +buscar_por_email(email: String) Usuario
-        +existe_login(login: String) boolean
-        +existe_matricula(matricula: String) boolean
-        +existe_telefone(telefone: String) boolean
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(usuario_atualizado: Usuario) Usuario
+        +remover(id_usuario: int)
+        +contar() int
+        +existe_login(login: String, id_ignorado: Optional~int~) boolean
+        +existe_matricula(matricula: String, id_ignorado: Optional~int~) boolean
+        +existe_telefone(telefone: String, id_ignorado: Optional~int~) boolean
     }
 
     class RepositorioRestaurantes {
@@ -500,6 +542,8 @@ classDiagram
     class RepositorioUsuariosArquivo {
         -caminho: Path
         +adicionar(usuario: Usuario) Usuario
+        +atualizar(usuario_atualizado: Usuario) Usuario
+        +remover(id_usuario: int)
         -carregar()
         -salvar()
     }
@@ -544,7 +588,7 @@ classDiagram
     RepositorioUsuariosArquivo ..> ErroPersistencia : lança
 
     note for ErroPersistencia "Herda de ErroPersistenciaBase (source/dominio/excecoes.py), base comum às ErroPersistencia de usuários e de restaurantes. Encapsula IOError e falhas de serialização; a causa original fica em __cause__."
-    note for RepositorioUsuariosArquivo "Serializa com pickle em arquivo binário. A gravação é atômica (arquivo temporário e troca), e a memória é revertida se falhar."
+    note for RepositorioUsuariosArquivo "Serializa com pickle em arquivo binário. A gravação é atômica (arquivo temporário e troca). O rollback da atualização requer correção para garantir restauração do estado anterior."
     note for FabricaRepositorio "Módulo fabrica_repositorio.py, composto por funções sem instanciação. Opção: memoria (padrão) ou arquivo."
     note for Usuario "Detalhado no diagrama de domínio"
 ```

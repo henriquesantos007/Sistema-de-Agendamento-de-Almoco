@@ -16,3 +16,5 @@
   esperada para as operações em arquivo.
 - [ ] Corrigir e testar o rollback da atualização quando a gravação falhar.
 - [ ] Testar rollback da remoção de usuário quando a gravação falhar.
+- [x] Atualizar os diagramas de análise, projeto e arquitetura lógica com o
+  CRUD de usuários e a validação de unicidade por `id_ignorado`.

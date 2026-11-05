@@ -12,9 +12,16 @@ Regras de comunicação respeitadas: **Ator ↔ Fronteira ↔ Controle ↔ Entid
 
 ---
 
-## 1. Gerenciamento de Usuários (Sprint 1)
+## 1. Gerenciamento de Usuários (Sprint 1 e Sprint 3)
 
-Cobre os casos de uso **Cadastrar Usuário**, **Cadastrar-se como Estudante** e **Listar Usuários**. Na Sprint 1, `RepositorioUsuarios` guarda os usuários numa coleção em **memória RAM**.
+Cobre os casos de uso **Cadastrar Usuário**, **Cadastrar-se como Estudante**,
+**Listar Usuários**, **Editar Usuário**, **Consultar Usuário** e **Remover
+Usuário**. O diagrama registra a evolução do repositório em memória da Sprint
+1; no Sprint 3, as mesmas operações também são delegadas às implementações de
+arquivo por meio do contrato `RepositorioUsuarios`.
+
+As classes de fronteira representam interações conceituais; a interface
+executável atual continua sendo a CLI de `main.py`.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -35,30 +42,44 @@ classDiagram
         +exibirUsuarios(usuarios: List~Usuario~)
     }
 
+    class TelaGerenciamentoUsuario {
+        <<Boundary>>
+        +consultar(usuarioId: int)
+        +exibirUsuario(usuario: Usuario)
+        +editar(usuarioId: int, dados: DadosUsuario)
+        +remover(usuarioId: int)
+        +exibirResultado(mensagem: String)
+        +exibirErros(erros: List~String~)
+    }
+
     class ControladorUsuario {
         <<Control>>
-        +cadastrarUsuario(dados: DadosUsuario) Usuario
-        +listarUsuarios() List~Usuario~
+        +cadastrar(dados: DadosUsuario) Usuario
+        +listar_todos() List~Usuario~
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(id_usuario: int, dados_atualizados: DadosUsuario) Usuario
+        +remover(id_usuario: int)
     }
 
     class ValidadorUsuario {
         <<Control>>
-        +validar(dados: DadosUsuario) List~String~
-        -emailEhValido(email: String) boolean
-        -loginJaCadastrado(login: String) boolean
-        -emailJaCadastrado(email: String) boolean
-        -matriculaJaCadastrada(matricula: String) boolean
+        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios, id_ignorado: Optional~int~) List~String~
     }
 
     class RepositorioUsuarios {
         <<Entity>>
         -usuarios: List~Usuario~
-        -proximoId: Long
+        -proximo_id: int
         +adicionar(usuario: Usuario) Usuario
-        +listarTodos() List~Usuario~
-        +buscarPorEmail(email: String) Usuario
-        +existeLogin(login: String) boolean
-        +existeMatricula(matricula: String) boolean
+        +listar_todos() List~Usuario~
+        +buscar_por_email(email: String) Usuario
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(usuario_atualizado: Usuario) Usuario
+        +remover(id_usuario: int)
+        +existe_login(login: String, id_ignorado: Optional~int~) boolean
+        +existe_matricula(matricula: String, id_ignorado: Optional~int~) boolean
+        +existe_telefone(telefone: String, id_ignorado: Optional~int~) boolean
+        +contar() int
     }
 
     class Usuario {
@@ -88,8 +109,9 @@ classDiagram
 
     TelaCadastroUsuario --> ControladorUsuario : solicita cadastro
     TelaListagemUsuarios --> ControladorUsuario : solicita listagem
+    TelaGerenciamentoUsuario --> ControladorUsuario : consulta / edita / remove
     ControladorUsuario --> ValidadorUsuario : valida dados
-    ControladorUsuario --> RepositorioUsuarios : adiciona / lista
+    ControladorUsuario --> RepositorioUsuarios : CRUD / conta
     ValidadorUsuario --> RepositorioUsuarios : consulta unicidade
     RepositorioUsuarios o-- "0..*" Usuario : armazena
     Usuario <|-- Estudante
@@ -109,9 +131,9 @@ sequenceDiagram
     participant R as RepositorioUsuarios
 
     Admin->>T: preenche dados e perfil
-    T->>C: cadastrarUsuario(dados)
-    C->>V: validar(dados)
-    V->>R: existeLogin / buscarPorEmail / existeMatricula
+    T->>C: cadastrar(dados)
+    C->>V: validar(dados, repositorio)
+    V->>R: existe_login / buscar_por_email / existe_matricula
     R-->>V: resultado
     alt dados inválidos
         V-->>C: lista de erros
@@ -138,11 +160,63 @@ sequenceDiagram
     participant R as RepositorioUsuarios
 
     Admin->>T: abre a listagem
-    T->>C: listarUsuarios()
-    C->>R: listarTodos()
+    T->>C: listar_todos()
+    C->>R: listar_todos()
     R-->>C: usuarios
     C-->>T: usuarios
     T-->>Admin: exibirUsuarios
+```
+
+### Colaboração: Consultar, editar e remover usuário
+
+```mermaid
+%%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
+sequenceDiagram
+    actor Admin as Administrador
+    participant T as TelaGerenciamentoUsuario
+    participant C as ControladorUsuario
+    participant V as ValidadorUsuario
+    participant R as RepositorioUsuarios
+
+    Admin->>T: consulta(usuarioId)
+    T->>C: buscar_por_id(usuarioId)
+    C->>R: buscar_por_id(usuarioId)
+    R-->>C: usuario ou None
+    alt usuário não encontrado
+        C-->>T: erro de não encontrado
+        T-->>Admin: exibe erro
+    else usuário encontrado
+        C-->>T: usuario
+        T-->>Admin: exibe dados sem senha/hash
+    end
+
+    Admin->>T: editar(usuarioId, dados)
+    T->>C: atualizar(usuarioId, dados)
+    C->>R: buscar_por_id(usuarioId)
+    R-->>C: usuario existente
+    C->>V: validar(dados, repositorio, id_ignorado=usuarioId)
+    V->>R: verifica unicidade excluindo o próprio usuário
+    R-->>V: resultado
+    alt dados inválidos
+        V-->>C: motivos de validação
+        C-->>T: recusa sem alterar o usuário
+    else dados válidos
+        C->>R: atualizar(usuario)
+        R-->>C: usuario atualizado
+        C-->>T: sucesso
+    end
+
+    Admin->>T: remover(usuarioId)
+    T->>C: remover(usuarioId)
+    C->>R: buscar_por_id(usuarioId)
+    R-->>C: usuario ou None
+    alt usuário não encontrado
+        C-->>T: erro de não encontrado
+    else usuário encontrado
+        C->>R: remover(usuarioId)
+        R-->>C: removido
+        C-->>T: resultado
+    end
 ```
 
 ---
