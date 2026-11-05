@@ -18,3 +18,4 @@
 - [ ] Testar rollback da remoção de usuário quando a gravação falhar.
 - [x] Atualizar os diagramas de análise, projeto e arquitetura lógica com o
   CRUD de usuários e a validação de unicidade por `id_ignorado`.
+- [x] Criar wireframes conceituais para consulta, edição e remoção de usuários.
