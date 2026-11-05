@@ -80,7 +80,11 @@ class ControladorUsuario:
     def atualizar(self, id_usuario: int, dados_atualizados):
         usuario_existente = self.buscar_por_id(id_usuario)
         
-        erros = self.validador_usuario.validar(dados_atualizados, self.repositorio_usuarios)
+        erros = self.validador_usuario.validar(
+            dados=dados_atualizados, 
+            repositorio = self.repositorio_usuarios,
+            id_ignorado = id_usuario
+        )
         
         if erros:
             raise ValueError(f"Erros de validação: {', '.join(erros)}")

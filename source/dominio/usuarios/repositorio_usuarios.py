@@ -18,16 +18,16 @@ class RepositorioUsuarios(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def existe_login(self, login: str) -> bool:
-        raise NotImplementedError
+    def existe_login(self, login: str, id_ignorado: Optional[int] = None) -> bool:
+        pass
 
     @abstractmethod
-    def existe_matricula(self, matricula: str) -> bool:
-        raise NotImplementedError
+    def existe_matricula(self, matricula: str, id_ignorado: Optional[int] = None) -> bool:
+        pass
 
     @abstractmethod
-    def existe_telefone(self, telefone: str) -> bool:
-        raise NotImplementedError
+    def existe_telefone(self, telefone: str, id_ignorado: Optional[int] = None) -> bool:
+        pass
     
     @abstractmethod
     def contar(self) -> int:

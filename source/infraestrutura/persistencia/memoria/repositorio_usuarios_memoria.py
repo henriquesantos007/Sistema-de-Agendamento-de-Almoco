@@ -30,26 +30,28 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
             None,
         )
 
-    def existe_login(self, login: str) -> bool:
+    def existe_login(self, login: str, id_ignorado: Optional[int] = None) -> bool:
         login_normalizado = login.strip().casefold()
         return any(
-            usuario.login.strip().casefold() == login_normalizado
+            usuario.login.strip().casefold() == login_normalizado and usuario.id != id_ignorado
             for usuario in self._usuarios
         )
 
-    def existe_matricula(self, matricula: str) -> bool:
+    def existe_matricula(self, matricula: str, id_ignorado: Optional[int] = None) -> bool:
         matricula_normalizada = matricula.strip().casefold()
         return any(
             isinstance(usuario, Estudante)
             and usuario.matricula.strip().casefold() == matricula_normalizada
+            and usuario.id != id_ignorado
             for usuario in self._usuarios
         )
 
-    def existe_telefone(self, telefone: str) -> bool:
+    def existe_telefone(self, telefone: str, id_ignorado: Optional[int] = None) -> bool:
         telefone_normalizado = re.sub(r"\D", "", telefone)
         return any(
             isinstance(usuario, Estudante)
             and re.sub(r"\D", "", usuario.telefone) == telefone_normalizado
+            and usuario.id != id_ignorado
             for usuario in self._usuarios
         )
     
