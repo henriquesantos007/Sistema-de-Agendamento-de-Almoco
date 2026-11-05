@@ -17,11 +17,11 @@ def normalizar_telefone(telefone: str) -> str:
 
 class ValidadorUsuarioBase(ABC):
     @abstractmethod
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         raise NotImplementedError
 
 class ValidadorDadosObrigatorios(ValidadorUsuarioBase):
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
         campos = {
@@ -38,7 +38,7 @@ class ValidadorDadosObrigatorios(ValidadorUsuarioBase):
         return erros
 
 class ValidadorEmail(ValidadorUsuarioBase):
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
         email = (dados.email or "").strip()
@@ -48,12 +48,15 @@ class ValidadorEmail(ValidadorUsuarioBase):
         if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
             erros.append("e-mail invalido")
         elif repositorio.buscar_por_email(email):
-            erros.append("e-mail ja cadastrado")
+            usuario_existente = repositorio.buscar_por_email(email)
+            
+            if usuario_existente and usuario_existente.id != id_ignorado:
+                erros.append("e-mail ja cadastrado")
 
         return erros
 
 class ValidadorPerfil(ValidadorUsuarioBase):
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
         perfil = (dados.perfil or "").strip().lower()
@@ -65,7 +68,7 @@ class ValidadorPerfil(ValidadorUsuarioBase):
         return erros
 
 class ValidadorEstudante(ValidadorUsuarioBase):
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
         perfil = (dados.perfil or "").strip().lower()
@@ -74,11 +77,11 @@ class ValidadorEstudante(ValidadorUsuarioBase):
 
         if not dados.matricula or not dados.matricula.strip():
             erros.append("matricula e obrigatoria para estudante")
-        elif repositorio.existe_matricula(dados.matricula):
+        elif repositorio.existe_matricula(dados.matricula, id_ignorado):
             erros.append("matricula ja cadastrada")
 
         telefone = re.sub(r"\D", "", dados.telefone or "")
-        if telefone and repositorio.existe_telefone(telefone):
+        if telefone and repositorio.existe_telefone(telefone, id_ignorado):
             erros.append("telefone ja cadastrado para estudante")
 
         return erros
@@ -87,7 +90,7 @@ class ValidadorGestorRestaurante(ValidadorUsuarioBase):
     def __init__(self, repositorio_restaurantes: RepositorioRestaurantes) -> None:
         self.repositorio_restaurantes = repositorio_restaurantes
 
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
         if (dados.perfil or "").strip().lower() != "gestor_restaurante":
@@ -101,18 +104,18 @@ class ValidadorGestorRestaurante(ValidadorUsuarioBase):
         return erros
 
 class ValidadorLogin(ValidadorUsuarioBase):
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         try:
             login = validar_login(dados.login)
         except LoginInvalido as erro:
             return list(erro.motivos)
 
-        if repositorio.existe_login(login):
+        if repositorio.existe_login(login, id_ignorado):
             return ["login ja cadastrado"]
         return []
 
 class ValidadorSenha(ValidadorUsuarioBase):
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         senha = dados.senha
         # Senha vazia ja e reportada por ValidadorDadosObrigatorios.
         if not senha or not senha.strip():
@@ -128,8 +131,8 @@ class ValidadorUsuario:
     def __init__(self, validadores):
         self.validadores = validadores
 
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
         for validador in self.validadores:
-            erros.extend(validador.validar(dados, repositorio))
+            erros.extend(validador.validar(dados, repositorio, id_ignorado))
         return erros

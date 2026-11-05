@@ -48,6 +48,29 @@ def tentar_cadastrar_usuario(fachada: FacadeSingletonController, dados: DadosUsu
     except ErroPersistenciaBase as erro:
         print(f"Falha de persistência ao cadastrar '{dados.login}': {erro}")
 
+def tentar_atualizar_usuario(fachada: FacadeSingletonController, usuario_id: int, dados: DadosUsuario) -> None:
+    try:
+        usuario_atualizado = fachada.atualizar_usuario(usuario_id, dados)
+        print(f"Atualizado: usuário {usuario_id} agora tem o nome '{usuario_atualizado.nome}', e-mail '{usuario_atualizado.email}'")
+    except DadosUsuarioInvalidos as erro:
+        print(f"Atualização do usuário {usuario_id} recusada:")
+        for mensagem in erro.erros:
+            print(f"  - {mensagem}")
+    except ValueError as erro:
+        print(f"Atualização recusada: {erro}")
+    except ErroPersistenciaBase as erro:
+        print(f"Falha de persistência ao atualizar usuário {usuario_id}: {erro}")
+
+
+def tentar_remover_usuario(fachada: FacadeSingletonController, usuario_id: int) -> None:
+    try:
+        fachada.remover_usuario(usuario_id)
+        print(f"Usuário {usuario_id} removido com sucesso.")
+    except ValueError as erro:
+        print(f"Remoção recusada: {erro}")
+    except ErroPersistenciaBase as erro:
+        print(f"Falha de persistência ao remover o usuário {usuario_id}: {erro}")
+
 
 def tentar_cadastrar_restaurante(fachada: FacadeSingletonController, dados: DadosRestaurante):
     try:
@@ -115,6 +138,45 @@ def executar_cenario_demonstracao(fachada: FacadeSingletonController) -> None:
             restaurante_id=restaurante.id,
         ))
         tentar_remover_restaurante(fachada, restaurante.id)
+
+    print("\n--- Testando Atualização de Usuário ---")
+    tentar_atualizar_usuario(fachada, 1, DadosUsuario(
+        perfil="estudante",
+        nome="Ana Oliveira", # Nome alterado
+        login="anasilva",
+        email="ana.oli@example.com", # Email alterado
+        senha="Senha@2026",
+        telefone="83999990000",
+        matricula="2026001",
+    ))
+    
+    # Testando o falso positivo: Atualizando apenas o nome, mantendo o email e login antigos
+    tentar_atualizar_usuario(fachada, 1, DadosUsuario(
+        perfil="estudante",
+        nome="Ana da Silva Oliveira",
+        login="anasilva", # Mesmo login
+        email="ana.oli@example.com", # Mesmo email
+        senha="Senha1@2026",
+        telefone="83999990000", # Mesmo telefone
+        matricula="2026001", # Mesma matrícula
+    ))
+
+    print("\n--- Testando Remoção de Usuário ---")
+    # Criando um usuário temporário para testar a remoção
+    tentar_cadastrar_usuario(fachada, DadosUsuario(
+        perfil="estudante",
+        nome="Usuario Temporario",
+        login="tempuser",
+        email="temp@example.com",
+        senha="Senha@2026",
+        telefone="83900000000",
+        matricula="2026999",
+    ))
+
+    # Remove o usuário temporário (supondo que ele recebeu ID 2)
+    tentar_remover_usuario(fachada, 2)
+    # Tenta remover um usuário que não existe (deve falhar graciosamente)
+    tentar_remover_usuario(fachada, 999)
 
 
 def exibir_relatorio_final(fachada: FacadeSingletonController) -> None:

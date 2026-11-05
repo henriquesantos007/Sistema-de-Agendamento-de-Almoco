@@ -87,6 +87,24 @@ repositórios.
 4. O repositório concreto atribui o ID; quando configurado para arquivo,
    persiste os dados antes de retornar sucesso.
 
+## Fluxo do CRUD de usuários
+
+- **Consulta:** a fachada encaminha `buscar_usuario(id)` ao controlador, que
+  delega `buscar_por_id(id)` ao contrato `RepositorioUsuarios`. Um ID ausente
+  é informado como usuário não encontrado.
+- **Atualização:** o controlador localiza o usuário, valida os dados com
+  `id_ignorado` para excluir o próprio registro das verificações de unicidade,
+  aplica os campos editáveis e delega a gravação ao repositório. O ID, o
+  perfil e os dados específicos do perfil permanecem inalterados.
+- **Remoção:** o controlador confirma a existência do ID antes de solicitar
+  `remover(id)` ao repositório. No armazenamento em arquivo, a alteração é
+  gravada antes de a operação ser considerada concluída.
+
+As implementações em arquivo usam gravação atômica. O rollback da atualização
+de usuário quando a gravação falha ainda requer correção; a garantia esperada
+de preservação do estado anterior está especificada em
+[NF-CON-01](../../openspec/specs/rnf/confiabilidade/spec.md).
+
 ## Contagem consolidada
 
 `RepositorioUsuarios` e `RepositorioRestaurantes` expõem `contar()`. Os
