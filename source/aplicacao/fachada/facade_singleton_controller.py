@@ -132,6 +132,19 @@ class FacadeSingletonController:
     def listar_usuarios(self) -> List[Usuario]:
         return self._controlador_usuario.listar_todos()
 
+    def buscar_usuario(self, usuario_id: int) -> Usuario:
+        return self._controlador_usuario.buscar_por_id(usuario_id)
+
+    def atualizar_usuario(
+        self,
+        usuario_id: int,
+        dados: DadosUsuario,
+    ) -> Usuario:
+        return self._controlador_usuario.atualizar(usuario_id, dados)
+
+    def remover_usuario(self, usuario_id: int) -> None:
+        self._controlador_usuario.remover(usuario_id)
+
     def cadastrar_restaurante(self, dados: DadosRestaurante) -> Restaurante:
         return self._controlador_restaurante.cadastrar(dados)
 

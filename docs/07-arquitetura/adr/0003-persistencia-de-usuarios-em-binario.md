@@ -13,7 +13,7 @@ Até o sprint 1, os usuários eram guardados apenas em memória (`RepositorioUsu
 Oferecer somente dois mecanismos de armazenamento, ambos como implementações de `RepositorioUsuarios` na camada de infraestrutura:
 
 - `persistencia/memoria/`: `RepositorioUsuariosMemoria`, já existente desde o sprint 1, mantido como opção padrão.
-- `persistencia/arquivo/`: `RepositorioUsuariosArquivo` serializa os usuários com `pickle` em arquivo binário. Herda de `RepositorioUsuariosMemoria` para reaproveitar as consultas, carrega o arquivo ao iniciar e regrava a cada inclusão com escrita atômica (arquivo temporário e `os.replace`), revertendo a memória se a gravação falhar.
+- `persistencia/arquivo/`: `RepositorioUsuariosArquivo` serializa os usuários com `pickle` em arquivo binário. Herda de `RepositorioUsuariosMemoria` para reaproveitar as consultas, carrega o arquivo ao iniciar e regrava após inclusão, atualização e remoção com escrita atômica (arquivo temporário e `os.replace`). Se a gravação falhar, o arquivo original deve permanecer intacto e o estado em memória deve ser revertido.
 
 Encapsular as falhas de arquivo (`IOError`) e de serialização em `ErroPersistencia`, definida no domínio (`source/dominio/usuarios/excecoes.py`), de modo que aplicação e apresentação não dependam de `pickle` nem de detalhes de infraestrutura.
 
@@ -24,12 +24,14 @@ Descartar o SQLite: não criar o pacote `persistencia/sqlite/` e remover a opç�
 ## Consequências
 
 - Os dados passam a sobreviver entre execuções.
+- Inclusões, atualizações e remoções em arquivo usam gravação atômica; em caso de falha, a operação deve preservar o arquivo e o estado em memória anteriores.
 - `ControladorUsuario` e os validadores não precisam de alteração, pois dependem apenas de `RepositorioUsuarios`.
 - Falhas de arquivo têm tratamento único por meio de `ErroPersistencia`, com a causa original em `__cause__`.
 - A troca de implementação continua demonstrada pela escolha entre `memoria` e `arquivo`.
 - O tratamento de exceções exigido é atendido para `IOError`; não há tratamento de erros de banco de dados, pois o sistema não usa banco.
 - Um novo mecanismo, inclusive um banco de dados, pode ser adicionado criando um pacote em `persistencia/` e registrando-o na fábrica; nesse caso, a decisão deve ser registrada em um novo ADR.
 - O `pickle` só deve carregar arquivos gerados pela própria aplicação; arquivos gerados antes de mudanças nas classes de domínio ficam incompatíveis e geram `ErroPersistencia`.
+- A reversão da atualização depende de preservar uma cópia do estado anterior à mutação da entidade. A implementação atual pode alterar a instância mantida pelo repositório antes de criar a cópia de segurança; é necessário corrigir esse fluxo e cobri-lo com teste de falha de gravação.
 - O repositório em arquivo não trata acesso simultâneo de vários processos.
 - Os arquivos de dados ficam em `dados/` e não devem ser versionados.
 

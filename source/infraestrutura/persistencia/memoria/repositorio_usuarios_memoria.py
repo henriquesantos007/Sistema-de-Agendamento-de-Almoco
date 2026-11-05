@@ -30,28 +30,45 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
             None,
         )
 
-    def existe_login(self, login: str) -> bool:
+    def existe_login(self, login: str, id_ignorado: Optional[int] = None) -> bool:
         login_normalizado = login.strip().casefold()
         return any(
-            usuario.login.strip().casefold() == login_normalizado
+            usuario.login.strip().casefold() == login_normalizado and usuario.id != id_ignorado
             for usuario in self._usuarios
         )
 
-    def existe_matricula(self, matricula: str) -> bool:
+    def existe_matricula(self, matricula: str, id_ignorado: Optional[int] = None) -> bool:
         matricula_normalizada = matricula.strip().casefold()
         return any(
             isinstance(usuario, Estudante)
             and usuario.matricula.strip().casefold() == matricula_normalizada
+            and usuario.id != id_ignorado
             for usuario in self._usuarios
         )
 
-    def existe_telefone(self, telefone: str) -> bool:
+    def existe_telefone(self, telefone: str, id_ignorado: Optional[int] = None) -> bool:
         telefone_normalizado = re.sub(r"\D", "", telefone)
         return any(
             isinstance(usuario, Estudante)
             and re.sub(r"\D", "", usuario.telefone) == telefone_normalizado
+            and usuario.id != id_ignorado
             for usuario in self._usuarios
         )
     
     def contar(self) -> int:
         return len(self._usuarios)
+
+    def buscar_por_id(self, id_usuario: int) -> Optional[Usuario]:
+        return next((usuario for usuario in self._usuarios if usuario.id == id_usuario), None)
+
+    def atualizar(self, usuario_atualizado: Usuario) -> Usuario:
+        for i, usuario in enumerate(self._usuarios):
+            if usuario.id == usuario_atualizado.id:
+                self._usuarios[i] = usuario_atualizado
+                return usuario_atualizado
+        raise ValueError("Usuário não encontrado para atualização.")
+
+    def remover(self, id_usuario: int) -> None:
+        usuario = self.buscar_por_id(id_usuario)
+        if usuario:
+            self._usuarios.remove(usuario)

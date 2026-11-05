@@ -2,6 +2,7 @@ import os
 import pickle
 from pathlib import Path
 from typing import Union
+import copy
 
 from source.dominio.usuarios.excecoes import ErroPersistencia
 from source.dominio.usuarios.usuario import Usuario
@@ -109,3 +110,30 @@ class RepositorioUsuariosArquivo(RepositorioUsuariosMemoria):
             temporario.unlink()
         except IOError:
             pass
+
+    def atualizar(self, usuario_atualizado: Usuario) -> Usuario:
+        usuario_antigo = self.buscar_por_id(usuario_atualizado.id)
+        # Cria uma cópia profunda para poder reverter a RAM se o disco falhar
+        estado_seguro = copy.deepcopy(usuario_antigo) if usuario_antigo else None
+        
+        super().atualizar(usuario_atualizado)
+        try:
+            self._salvar()
+        except ErroPersistencia:
+            if estado_seguro:
+                super().atualizar(estado_seguro) # Rollback
+            raise
+        return usuario_atualizado
+
+    def remover(self, id_usuario: int) -> None:
+        usuario_removido = self.buscar_por_id(id_usuario)
+        if not usuario_removido:
+            return
+            
+        index = self._usuarios.index(usuario_removido)
+        super().remover(id_usuario)
+        try:
+            self._salvar()
+        except ErroPersistencia:
+            self._usuarios.insert(index, usuario_removido) # Rollback
+            raise
