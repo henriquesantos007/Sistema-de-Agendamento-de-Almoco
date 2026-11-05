@@ -1,9 +1,13 @@
 # Casos de Uso Detalhados
 
-Este documento detalha os casos de uso selecionados para a entrega:
-**UC05 — Cadastrar Usuário**, **UC08 — Editar Usuário**,
-**UC12 — Cadastrar Restaurante**, **UC16 — Remover Restaurante**,
-**UC20 — Consultar Usuário** e **UC21 — Remover Usuário**. Os atores,
+Para a entrega, os três casos de uso selecionados como mais relevantes são
+**UC05 — Cadastrar Usuário**, **UC12 — Cadastrar Restaurante** e
+**UC16 — Remover Restaurante**. Eles cobrem o cadastro de usuários, o CRUD da
+nova entidade e a regra de remoção condicionada ao vínculo com gestores.
+
+Como documentação complementar, este arquivo também detalha
+**UC08 — Editar Usuário**, **UC20 — Consultar Usuário** e
+**UC21 — Remover Usuário**, operações implementadas no CRUD de usuários. Os atores,
 precondições e fluxos seguem as
 regras de [usuários](../../openspec/specs/usuarios/spec.md) e
 [restaurantes](../../openspec/specs/restaurantes/spec.md), e os RNFs de
