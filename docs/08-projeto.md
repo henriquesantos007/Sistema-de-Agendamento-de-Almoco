@@ -1,4 +1,10 @@
-# Diagrama de Classes de Domínio
+# Documento do Projeto — Versão 2
+
+Esta versão consolida o modelo do domínio e as revisões do projeto até a
+Sprint 3. Além do diagrama de classes de domínio, contempla a análise e o
+projeto do CRUD de usuários e restaurantes, a fachada Singleton e a persistência.
+
+## Diagrama de Classes de Domínio
 
 Este diagrama mostra as entidades do sistema, com seus atributos, operações e relacionamentos. Ele organiza o domínio em quatro partes:
 
