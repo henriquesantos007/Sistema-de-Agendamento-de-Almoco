@@ -72,7 +72,7 @@ class ControladorUsuario:
         return self.repositorio.contar()
     
     def buscar_por_id(self, id_usuario: int):
-        usuario = self.repositorio_usuarios.buscar_por_id(id_usuario)
+        usuario = self.repositorio.buscar_por_id(id_usuario)
         if not usuario:
             raise ValueError(f"Usuário com ID '{id_usuario}' não encontrado.")
         return usuario
@@ -82,7 +82,7 @@ class ControladorUsuario:
         
         erros = self.validador_usuario.validar(
             dados=dados_atualizados, 
-            repositorio = self.repositorio_usuarios,
+            repositorio = self.repositorio,
             id_ignorado = id_usuario
         )
         
@@ -96,9 +96,9 @@ class ControladorUsuario:
         usuario_existente.login = dados_atualizados.login
         usuario_existente.telefone = dados_atualizados.telefone
         
-        return self.repositorio_usuarios.atualizar(usuario_existente)
+        return self.repositorio.atualizar(usuario_existente)
 
     def remover(self, id_usuario: int):
         self.buscar_por_id(id_usuario)
         
-        self.repositorio_usuarios.remover(id_usuario)
+        self.repositorio.remover(id_usuario)
