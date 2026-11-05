@@ -1,15 +1,21 @@
 ## MODIFIED Requirements
 
 ### Requirement: NF-SEG-01 — Não exibir senhas
-O sistema NÃO DEVE exibir a senha (nem o seu hash) na listagem de usuários nem nas mensagens de validação.
+O sistema NÃO DEVE exibir a senha (nem o seu hash) na listagem ou na consulta
+individual de usuários, nem nas mensagens de validação.
 
 **Prioridade:** Essencial
-**Casos de uso:** UC06, UC08, UC10
+**Casos de uso:** UC05, UC06, UC08, UC10, UC20
 
 #### Scenario: Listagem sem senhas
 - **GIVEN** existem 3 usuários cadastrados
 - **WHEN** o Administrador solicita a listagem
 - **THEN** a saída contém 0 ocorrências das senhas cadastradas e 0 ocorrências do texto "pbkdf2_sha256"
+
+#### Scenario: Consulta individual sem senha ou hash
+- **GIVEN** o usuário de id 1 possui uma senha armazenada como hash
+- **WHEN** o Administrador consulta o usuário de id 1
+- **THEN** os dados devolvidos não contêm a senha nem o hash
 
 #### Scenario: Mensagem de validação sem a senha
 - **WHEN** o Administrador tenta cadastrar a senha "curta"

@@ -14,8 +14,10 @@ regras de [usuários](../../openspec/specs/usuarios/spec.md) e
 [segurança](../../openspec/specs/rnf/seguranca/spec.md),
 [usabilidade](../../openspec/specs/rnf/usabilidade/spec.md) e
 [confiabilidade](../../openspec/specs/rnf/confiabilidade/spec.md). As telas
-descritas são conceituais; a interface executável atual continua sendo a CLI
-de `main.py`.
+descritas são conceituais. A CLI de `main.py` demonstra cadastro, atualização
+e remoção de usuários, cadastro e remoção de restaurantes e o relatório final;
+a consulta individual e a atualização de restaurantes são operações da
+fachada, mas não são exercitadas pelo cenário da CLI.
 
 ## UC05 — Cadastrar Usuário
 
@@ -81,7 +83,7 @@ de `main.py`.
 
 1. O Administrador solicita a consulta e informa o identificador do usuário.
 2. O sistema busca o usuário pelo identificador.
-3. O sistema devolve os dados do usuário encontrado, sem exibir a senha nem seu hash.
+3. O sistema devolve os dados do usuário encontrado, sem exibir a senha nem seu hash, conforme [NF-SEG-01](../../openspec/specs/rnf/seguranca/spec.md).
 
 ### Fluxos alternativos e de exceção
 

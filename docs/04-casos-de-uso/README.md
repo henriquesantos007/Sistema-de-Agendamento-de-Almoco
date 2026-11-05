@@ -23,8 +23,13 @@ Os casos ⭐ UC05 e UC06 correspondem à **Sprint 1** (cadastro e listagem).
 Os casos ⭐ UC08, UC20 e UC21 registram as operações de edição, consulta por
 identificador e remoção de usuários concluídas na **Sprint 3**, junto ao CRUD
 de restaurantes e à fachada. Com UC05 e UC06, esses casos documentam o CRUD
-de usuários. Os fluxos são demonstrados pela CLI, sem telas web dedicadas.
-As descrições detalhadas dos casos de usuário estão em
+de usuários. Não há telas web dedicadas. O cenário em `main.py` demonstra o
+cadastro, a atualização e a remoção de
+usuários, além da listagem no relatório final. A consulta individual UC20 está
+disponível pela fachada, mas não é exercitada por esse cenário. No CRUD de
+restaurantes, o cenário demonstra cadastro, remoção e listagem final; consulta
+e atualização estão disponíveis pela fachada, mas não são exercitadas pela
+CLI. As descrições detalhadas dos casos de uso estão em
 [casos de uso detalhados](./detalhados.md).
 
 ```mermaid
