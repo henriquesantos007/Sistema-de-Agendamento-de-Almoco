@@ -17,10 +17,14 @@ Perfis de usuário do sistema:
 
 ---
 
-## 1. Gerenciamento de Usuários (Laboratório 1)
+## 1. Gerenciamento de Usuários (CRUD — Sprint 1 e Sprint 3)
 
-Casos de uso marcados com ⭐ fazem parte da **Sprint 1** (adição e listagem de usuários).
-A descrição completa de **UC05** está em
+Os casos ⭐ UC05 e UC06 correspondem à **Sprint 1** (cadastro e listagem).
+Os casos ⭐ UC08, UC20 e UC21 registram as operações de edição, consulta por
+identificador e remoção de usuários concluídas na **Sprint 3**, junto ao CRUD
+de restaurantes e à fachada. Com UC05 e UC06, esses casos documentam o CRUD
+de usuários. Os fluxos são demonstrados pela CLI, sem telas web dedicadas.
+As descrições detalhadas dos casos de usuário estão em
 [casos de uso detalhados](./detalhados.md).
 
 ```mermaid
@@ -38,10 +42,12 @@ flowchart LR
         UC05(["⭐ Cadastrar Usuário"])
         UC06(["⭐ Listar Usuários"])
         UC07(["Filtrar Usuários por Perfil/Status"])
-        UC08(["Editar Usuário"])
+        UC08(["⭐ Editar Usuário"])
         UC09(["Ativar/Desativar Usuário"])
         UC10(["Validar Dados do Usuário"])
         UC11(["Vincular Gestor a Restaurante"])
+        UC20(["⭐ Consultar Usuário"])
+        UC21(["⭐ Remover Usuário"])
     end
 
     estudante --> UC01
@@ -58,6 +64,8 @@ flowchart LR
     admin --> UC06
     admin --> UC08
     admin --> UC09
+    admin --> UC20
+    admin --> UC21
 
     UC01 -. "«include»" .-> UC10
     UC05 -. "«include»" .-> UC10
@@ -72,7 +80,10 @@ flowchart LR
 | **Cadastrar-se como Estudante** | Estudante informa nome, e-mail, telefone e senha. Conta criada com status `ATIVO`. |
 | ⭐ **Cadastrar Usuário** | Administrador cadastra usuário de qualquer perfil (Estudante, Gestor de Restaurante ou Administrador). Se for Gestor, vincula-o a um restaurante. |
 | ⭐ **Listar Usuários** | Administrador visualiza todos os usuários cadastrados (nome, e-mail, perfil, status). Pode filtrar e, a partir da lista, ativar/desativar. |
-| **Validar Dados do Usuário** | Verifica campos obrigatórios, formato de e-mail, e-mail único e telefone único (Estudante). |
+| ⭐ **UC08 Editar Usuário** | Administrador atualiza nome, login, e-mail, senha e telefone, mantendo o identificador, o perfil e os dados específicos do perfil; a validação ignora os dados únicos do próprio usuário. |
+| **UC10 Validar Dados do Usuário** | Verifica campos obrigatórios, formato de e-mail, e-mail único e telefone único (Estudante), tanto no cadastro quanto na edição. |
+| ⭐ **UC20 Consultar Usuário** | Administrador consulta os dados de um usuário pelo identificador; informa quando o usuário não existe. |
+| ⭐ **UC21 Remover Usuário** | Administrador remove um usuário pelo identificador; informa quando o usuário não existe. |
 
 ---
 
@@ -185,6 +196,8 @@ flowchart LR
             UC_AtivarDesativar(["Ativar/Desativar Usuário (UC09)"])
             UC_ValidarUsuario(["Validar Dados do Usuário (UC10)"])
             UC_VincularGestor(["Vincular Gestor a Restaurante (UC11)"])
+            UC_ConsultarUsuario(["Consultar Usuário (UC20)"])
+            UC_RemoverUsuario(["Remover Usuário (UC21)"])
             UC12(["Cadastrar Restaurante (UC12)"])
             UC13(["Consultar Restaurante (UC13)"])
             UC14(["Listar Restaurantes (UC14)"])
@@ -242,6 +255,8 @@ flowchart LR
     admin --> UC_ListarUsuarios
     admin --> UC_EditarUsuario
     admin --> UC_AtivarDesativar
+    admin --> UC_ConsultarUsuario
+    admin --> UC_RemoverUsuario
     admin --> UC12
     admin --> UC13
     admin --> UC14
@@ -267,8 +282,8 @@ flowchart LR
     UC_Estornar --> gateway
 ```
 
-O diagrama inclui os casos especializados de cadastro, consulta, listagem,
-atualização, remoção, validação e resumo, além dos fluxos de estudante,
+O diagrama inclui os casos especializados de cadastro, consulta e listagem de
+usuários, edição e remoção de usuários, validação e resumo, além dos fluxos de estudante,
 gestor, pagamento e notificações. Os diagramas de usuários e restaurantes
 acima detalham seus respectivos subconjuntos.
 
