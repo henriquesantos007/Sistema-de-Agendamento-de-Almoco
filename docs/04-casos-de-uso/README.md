@@ -324,3 +324,31 @@ acima detalham seus respectivos subconjuntos.
   3. Sistema cancela esses pedidos com o motivo informado e solicita estorno dos que já foram pagos.
   4. Sistema notifica cada estudante afetado.
 - **Pós-condição:** itens ficam `INDISPONIVEL`; novos agendamentos para eles são bloqueados.
+
+## Rastreabilidade dos requisitos funcionais
+
+A tabela relaciona todos os requisitos funcionais canônicos às suas
+realizações em casos de uso. RF05 é transversal: a escolha do armazenamento
+ocorre na inicialização e seus efeitos são observáveis nos casos de uso de
+cadastro e listagem das duas entidades.
+
+| Requisito | Casos de uso relacionados |
+|-----------|---------------------------|
+| RF01 — Cadastrar usuário | UC01, UC05, UC11 |
+| RF02 — Regras de login | UC10 |
+| RF03 — Regras de senha | UC10 |
+| RF04 — Listar usuários | UC06 |
+| RF05 — Escolher o mecanismo de armazenamento | UC05, UC06, UC12, UC14 |
+| RF06 — Impedir dados duplicados | UC05, UC08, UC10 |
+| RF07 — Cadastrar restaurante | UC12, UC18 |
+| RF08 — Consultar restaurante pelo identificador | UC13 |
+| RF09 — Listar restaurantes | UC14 |
+| RF10 — Atualizar restaurante | UC15, UC18 |
+| RF11 — Remover restaurante | UC16, UC19 |
+| RF12 — Exibir resumo de entidades cadastradas | UC17 |
+| RF13 — Consultar usuário pelo identificador | UC20 |
+| RF14 — Atualizar usuário | UC08 |
+| RF15 — Remover usuário | UC21 |
+
+As descrições normativas e os cenários de cada requisito estão nas
+[especificações OpenSpec](../../openspec/specs/).
