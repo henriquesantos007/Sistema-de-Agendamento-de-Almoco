@@ -21,8 +21,11 @@ comportamento implementado.
   UC21 para remoção, sem renumerar casos de uso existentes.
 - Tratar o identificador inexistente como recusa da operação; consulta,
   atualização e remoção usam a mesma mensagem de usuário não encontrado.
-- Não descrever neste pacote a proteção de senha na atualização; essa regra
-  pertence à especificação de segurança.
+- A atualização deve aplicar a regra de hash de NF-SEG-02. A implementação
+  atual ainda atribui a senha recebida diretamente, portanto essa exigência
+  fica registrada como pendência de implementação.
+- A rejeição por validação deve reunir todos os motivos em uma única mensagem
+  e preservar o usuário existente.
 
 ## Consequências
 
