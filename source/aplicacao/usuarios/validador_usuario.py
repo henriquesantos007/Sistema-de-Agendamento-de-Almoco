@@ -87,10 +87,10 @@ class ValidadorEstudante(ValidadorUsuarioBase):
         return erros
 
 class ValidadorGestorRestaurante(ValidadorUsuarioBase):
-    def __init__(self, repositorio_restaurantes: RepositorioRestaurantes, id_ignorado: int = None) -> None:
+    def __init__(self, repositorio_restaurantes: RepositorioRestaurantes) -> None:
         self.repositorio_restaurantes = repositorio_restaurantes
 
-    def validar(self, dados, repositorio) -> List[str]:
+    def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
         if (dados.perfil or "").strip().lower() != "gestor_restaurante":
