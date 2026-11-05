@@ -55,3 +55,18 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
     
     def contar(self) -> int:
         return len(self._usuarios)
+
+    def buscar_por_id(self, id_usuario: int) -> Optional[Usuario]:
+        return next((usuario for usuario in self._usuarios if usuario.id == id_usuario), None)
+
+    def atualizar(self, usuario_atualizado: Usuario) -> Usuario:
+        for i, usuario in enumerate(self._usuarios):
+            if usuario.id == usuario_atualizado.id:
+                self._usuarios[i] = usuario_atualizado
+                return usuario_atualizado
+        raise ValueError("Usuário não encontrado para atualização.")
+
+    def remover(self, id_usuario: int) -> None:
+        usuario = self.buscar_por_id(id_usuario)
+        if usuario:
+            self._usuarios.remove(usuario)

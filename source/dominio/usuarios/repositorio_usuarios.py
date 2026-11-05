@@ -32,3 +32,15 @@ class RepositorioUsuarios(ABC):
     @abstractmethod
     def contar(self) -> int:
         raise NotImplementedError
+
+    @abstractmethod
+    def buscar_por_id(self, id_usuario: int) -> Optional[Usuario]:
+        pass
+
+    @abstractmethod
+    def atualizar(self, usuario_atualizado: Usuario) -> Usuario:
+        pass
+
+    @abstractmethod
+    def remover(self, id_usuario: int) -> None:
+        pass
