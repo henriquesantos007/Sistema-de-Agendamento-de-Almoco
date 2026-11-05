@@ -35,3 +35,10 @@ comportamento implementado.
   comportamento para identificadores inexistentes.
 - Uma futura mudança que permita alterar perfil, matrícula ou restaurante do
   gestor deve atualizar RF14 e seus cenários.
+
+## Arquivamento
+
+O pacote foi arquivado em `openspec/changes/archive/2026-11-05-crud-usuario`
+sem reaplicar os deltas, pois os requisitos correspondentes já estão nas
+especificações canônicas. As tarefas de hash da senha e rollback permanecem
+pendentes e não são declaradas concluídas por este arquivamento.
