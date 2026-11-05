@@ -42,6 +42,20 @@ O sistema DEVE, quando não conseguir gravar um usuário ou um restaurante no ar
 - **AND** o arquivo "dados/usuarios.bin" mantém o mesmo hash SHA-256 de antes da operação
 - **AND** os 2 usuários continuam presentes na memória e após recarregar o arquivo
 
+#### Scenario: Falha ao gravar atualização de restaurante
+- **GIVEN** o armazenamento em arquivo contém o restaurante de id 1 com nome "Restaurante do CI"
+- **AND** a gravação do arquivo falha durante a atualização
+- **WHEN** o Administrador atualiza o nome do restaurante 1 para "RU do CI"
+- **THEN** o arquivo "dados/restaurantes.bin" mantém o mesmo hash SHA-256 de antes da operação
+- **AND** o restaurante de id 1 continua com o nome "Restaurante do CI" na memória e após recarregar o arquivo
+
+#### Scenario: Falha ao gravar remoção de restaurante
+- **GIVEN** o armazenamento em arquivo contém 2 restaurantes, incluindo o restaurante de id 2
+- **AND** a gravação do arquivo falha durante a remoção
+- **WHEN** o Administrador remove o restaurante 2
+- **THEN** o arquivo "dados/restaurantes.bin" mantém o mesmo hash SHA-256 de antes da operação
+- **AND** os 2 restaurantes continuam presentes na memória e após recarregar o arquivo
+
 ### Requirement: NF-CON-02 — Recusar arquivo de dados corrompido
 O sistema DEVE recusar iniciar com um arquivo de dados corrompido, informando o motivo, em vez de carregar dados inválidos ou encerrar com erro não tratado.
 

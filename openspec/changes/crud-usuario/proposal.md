@@ -16,12 +16,16 @@ além do tratamento da unicidade na atualização.
 - Registra os casos de uso UC20 (Consultar Usuário) e UC21 (Remover Usuário);
   a atualização corresponde ao UC08 (Editar Usuário), já existente no
   catálogo.
+- Atualiza os RNFs de segurança, usabilidade e confiabilidade para cobrir a
+  senha na edição, mensagens de validação da atualização e rollback de falhas
+  de persistência nas operações CRUD.
 
 ## Fora de escopo
 
 - Alterar a implementação do CRUD ou os testes de código.
-- Alterar a política de segurança e armazenamento de senha, que será tratada
-  em requisito de segurança próprio.
+- Alterar a implementação de hashing de senha. Esta mudança atualiza NF-SEG-02
+  para especificar o comportamento esperado na edição; a implementação desse
+  comportamento permanece pendente.
 - Alterar perfil, matrícula ou restaurante vinculado durante a atualização;
   a implementação atual mantém esses dados.
 - Implementar interface web: as operações disponíveis no PR são exercitadas

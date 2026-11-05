@@ -4,7 +4,7 @@
 O sistema NÃO DEVE cadastrar nem atualizar um usuário de modo que seu login ou e-mail pertença a outro usuário, nem um Estudante de modo que sua matrícula ou telefone pertença a outro Estudante. Na atualização, os dados do próprio usuário não são considerados duplicados. A comparação desconsidera maiúsculas/minúsculas e espaços nas pontas.
 
 **Prioridade:** Essencial
-**Casos de uso:** UC10, UC08
+**Casos de uso:** UC08, UC10
 
 #### Scenario: Login já cadastrado
 - **GIVEN** já existe um usuário com login "victor"
