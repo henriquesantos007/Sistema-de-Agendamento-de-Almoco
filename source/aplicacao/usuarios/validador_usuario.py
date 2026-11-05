@@ -77,7 +77,7 @@ class ValidadorEstudante(ValidadorUsuarioBase):
 
         if not dados.matricula or not dados.matricula.strip():
             erros.append("matricula e obrigatoria para estudante")
-        elif repositorio.existe_matricula(dados.matricula):
+        elif repositorio.existe_matricula(dados.matricula, id_ignorado):
             erros.append("matricula ja cadastrada")
 
         telefone = re.sub(r"\D", "", dados.telefone or "")
