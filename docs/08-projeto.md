@@ -876,10 +876,17 @@ stateDiagram-v2
 
 ## Padrões de Projeto Utilizados
 
-| Padrão | Onde foi aplicado | Justificativa |
-|--------|-------------------|---------------|
-| **Factory Method** | `FabricaRepositorio` | Isola a lógica de instanciação da persistência escolhida no momento da execução (Memória RAM vs Arquivo Binário), permitindo substituição transparente. |
-| **Composite** | `ValidadorUsuario` | Permite agrupar várias regras de validação independentes (`ValidadorLogin`, `ValidadorSenha`) em uma única lista, tratando a execução delas de forma uniforme. |
-| **Repository** | `RepositorioUsuarios` e `RepositorioRestaurantes` | Isola as regras de negócio dos detalhes de infraestrutura e permite trocar as implementações de persistência. |
-| **Facade** | `FacadeSingletonController` | Oferece aos clientes uma única interface para as operações dos controladores de usuários e restaurantes. |
-| **Singleton** | `FacadeSingletonController` | Mantém uma instância da fachada por processo, obtida por `obter_instancia`. |
+A tabela distingue padrões já presentes no código daqueles planejados para a
+Sprint 4. Os padrões planejados estão documentados como decisões propostas e
+não devem ser considerados implementados até que o código e os testes sejam
+entregues.
+
+| Padrão | Situação | Onde foi aplicado ou está previsto | Justificativa |
+|--------|----------|------------------------------------|---------------|
+| **Factory Method** | Implementado | `criar_repositorio_usuarios` e `criar_repositorio_restaurantes`, em `FabricaRepositorio` | Centraliza a escolha da implementação de persistência (memória ou arquivo) na composição da aplicação. |
+| **Repository** | Implementado | `RepositorioUsuarios` e `RepositorioRestaurantes`, com implementações em memória e arquivo | Mantém os controladores dependentes dos contratos do domínio, isolando-os dos detalhes de persistência. |
+| **Composite** | Implementado | `ValidadorUsuario` e seus validadores | Agrupa validadores individuais e permite executá-los uniformemente, reunindo os motivos de validação. |
+| **Facade** | Implementado | `FacadeSingletonController` | Oferece uma interface única para as operações dos controladores de usuários e restaurantes. |
+| **Singleton** | Implementado | `FacadeSingletonController.obter_instancia` | Mantém uma instância da fachada por processo e centraliza sua configuração. |
+| **Adapter** | Planejado | Adaptador de logging previsto na [ADR-0010](./07-arquitetura/adr/0010-adapter-para-logging.md) | Isola a aplicação da API da biblioteca de logging; os logs serão usados para eventos operacionais, não como fonte das estatísticas de acesso. |
+| **Template Method** | Planejado | Geração de relatórios de acesso em HTML e CSV | Compartilha o fluxo de consulta e geração do relatório, permitindo especializar a apresentação de cada formato. |
