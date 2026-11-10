@@ -1,8 +1,9 @@
 # Documento do Projeto — Versão 2
 
 Esta versão consolida o modelo do domínio e as revisões do projeto até a
-Sprint 3. Além do diagrama de classes de domínio, contempla a análise e o
-projeto do CRUD de usuários e restaurantes, a fachada Singleton e a persistência.
+Sprint 4. Além do diagrama de classes de domínio, contempla a análise e o
+projeto do CRUD de usuários e restaurantes, a fachada Singleton, a persistência
+e a separação de camadas prevista para Repository e Factory.
 
 ## Diagrama de Classes de Domínio
 
@@ -190,6 +191,186 @@ classDiagram
     note for Pagamento "PIX e CARTAO são processados pelo GatewayPagamento. DINHEIRO fica PENDENTE e é registrado pelo gestor na retirada."
     note for ItemCardapio "Oferta de um prato em uma data específica; pode ficar INDISPONIVEL só naquele dia"
 ```
+
+## Diagrama de Classes de Projeto — Camadas Business e Infra (S4.1)
+
+O diagrama a seguir detalha a separação entre a camada business (aplicação e
+domínio) e a infraestrutura para as entidades já persistidas no código:
+usuários e restaurantes. Também mostra, como **planejados**, o registro de
+acesso, seu repositório, o Adapter de logging e a geração de relatórios
+definidos para a Sprint 4. Os demais elementos do diagrama de domínio acima
+continuam conceituais e ainda não têm persistência implementada neste projeto.
+
+`<<implementado>>` identifica componentes presentes no código; `<<planejado>>`
+identifica componentes de desenho que ainda precisam ser implementados. Os
+contratos Repository ficam no domínio, enquanto as implementações concretas e
+a seleção pela Factory ficam na infraestrutura. Neste recorte, as classes
+`Prato`, `Cardapio`, `ItemCardapio`, `Pedido`, `ItemPedido`, `Pagamento` e
+`Notificacao` do diagrama de domínio continuam conceituais; seus repositórios
+não são apresentados como implementados.
+
+```mermaid
+classDiagram
+    direction TB
+
+    namespace BusinessAplicacao {
+        class FacadeSingletonController {
+            <<implementado>>
+        }
+        class ControladorUsuario {
+            <<implementado>>
+        }
+        class ControladorRestaurante {
+            <<implementado>>
+        }
+        class ServicoRelatorioAcesso {
+            <<planejado>>
+            +gerar(formato: String) Documento
+        }
+        class TemplateRelatorioAcesso {
+            <<abstract>>
+            +gerar() Documento
+            #obter_estatisticas() EstatisticasAcesso
+            #formatar(estatisticas: EstatisticasAcesso) Documento
+        }
+        class RelatorioAcessoHTML {
+            <<planejado>>
+            #formatar(estatisticas: EstatisticasAcesso) Documento
+        }
+        class RelatorioAcessoCSV {
+            <<planejado>>
+            #formatar(estatisticas: EstatisticasAcesso) Documento
+        }
+        class LoggerAplicacao {
+            <<interface>>
+            +registrar(evento: String, detalhes: String)
+        }
+        class DadosRelatorioAcesso
+    }
+
+    namespace BusinessDominio {
+        class Usuario {
+            <<abstract>>
+        }
+        class Estudante {
+            <<implementado>>
+        }
+        class GestorRestaurante {
+            <<implementado>>
+        }
+        class Administrador {
+            <<implementado>>
+        }
+        class Restaurante {
+            <<implementado>>
+        }
+        class RegistroAcesso {
+            <<planejado>>
+            +usuario_id: int
+            +instante: DateTime
+        }
+        class RepositorioUsuarios {
+            <<interface>>
+        }
+        class RepositorioRestaurantes {
+            <<interface>>
+        }
+        class RepositorioAcessos {
+            <<interface>>
+            +registrar(acesso: RegistroAcesso)
+            +listar_todos() List~RegistroAcesso~
+        }
+    }
+
+    namespace Infraestrutura {
+        class FabricaRepositorio {
+            <<Factory Method>>
+            +criar_repositorio_usuarios(armazenamento: String) RepositorioUsuarios
+            +criar_repositorio_restaurantes(armazenamento: String) RepositorioRestaurantes
+            +criar_repositorio_acessos(armazenamento: String) RepositorioAcessos
+        }
+        class RepositorioUsuariosMemoria {
+            <<implementado>>
+        }
+        class RepositorioUsuariosArquivo {
+            <<implementado>>
+        }
+        class RepositorioRestaurantesMemoria {
+            <<implementado>>
+        }
+        class RepositorioRestaurantesArquivo {
+            <<implementado>>
+        }
+        class RepositorioAcessosMemoria {
+            <<planejado>>
+        }
+        class RepositorioAcessosArquivo {
+            <<planejado>>
+        }
+        class AdaptadorLogging {
+            <<Adapter>>
+        }
+        class BibliotecaLogging {
+            <<logging da biblioteca padrão>>
+        }
+    }
+
+    FacadeSingletonController *-- ControladorUsuario : monta
+    FacadeSingletonController *-- ControladorRestaurante : monta
+    ControladorUsuario --> RepositorioUsuarios : usa
+    ControladorRestaurante --> RepositorioRestaurantes : usa
+
+    RepositorioUsuarios <|.. RepositorioUsuariosMemoria
+    RepositorioUsuariosMemoria <|-- RepositorioUsuariosArquivo
+    RepositorioRestaurantes <|.. RepositorioRestaurantesMemoria
+    RepositorioRestaurantesMemoria <|-- RepositorioRestaurantesArquivo
+    RepositorioAcessos <|.. RepositorioAcessosMemoria
+    RepositorioAcessosMemoria <|-- RepositorioAcessosArquivo
+
+    RepositorioUsuariosMemoria o-- Usuario : armazena
+    RepositorioRestaurantesMemoria o-- Restaurante : armazena
+    RepositorioAcessosMemoria o-- RegistroAcesso : armazena
+    RegistroAcesso --> Usuario : identifica
+    Usuario <|-- Estudante
+    Usuario <|-- GestorRestaurante
+    Usuario <|-- Administrador
+
+    FabricaRepositorio ..> RepositorioUsuariosMemoria : cria
+    FabricaRepositorio ..> RepositorioUsuariosArquivo : cria
+    FabricaRepositorio ..> RepositorioRestaurantesMemoria : cria
+    FabricaRepositorio ..> RepositorioRestaurantesArquivo : cria
+    FabricaRepositorio ..> RepositorioAcessosMemoria : planejado
+    FabricaRepositorio ..> RepositorioAcessosArquivo : planejado
+
+    ServicoRelatorioAcesso --> TemplateRelatorioAcesso : seleciona formato
+    TemplateRelatorioAcesso --> RepositorioAcessos : consulta
+    TemplateRelatorioAcesso ..> DadosRelatorioAcesso : produz
+    TemplateRelatorioAcesso <|-- RelatorioAcessoHTML
+    TemplateRelatorioAcesso <|-- RelatorioAcessoCSV
+    ServicoRelatorioAcesso --> LoggerAplicacao : registra resultado
+    LoggerAplicacao <|.. AdaptadorLogging : adapta
+    AdaptadorLogging --> BibliotecaLogging : delega
+
+    note for FabricaRepositorio "A seleção de usuários e restaurantes está implementada; a de acessos é planejada."
+    note for RepositorioUsuarios "Contrato de domínio implementado."
+    note for RepositorioRestaurantes "Contrato de domínio implementado."
+    note for RepositorioUsuariosMemoria "Implementação existente em memória."
+    note for RepositorioUsuariosArquivo "Implementação existente em arquivo."
+    note for RepositorioRestaurantesMemoria "Implementação existente em memória."
+    note for RepositorioRestaurantesArquivo "Implementação existente em arquivo."
+    note for TemplateRelatorioAcesso "O serviço, o Template Method e os formatos HTML e CSV são planejados pela change relatorio-de-acessos."
+    note for LoggerAplicacao "Contrato planejado; o Adapter e sua integração com logging ainda não foram implementados."
+    note for RepositorioAcessos "Contrato, entidade e implementações do registro de acesso ainda precisam ser implementados."
+    note for BibliotecaLogging "Representa o módulo logging da biblioteca padrão do Python."
+```
+
+O `ServicoRelatorioAcesso` representa o ponto de coordenação do caso de uso; o
+`TemplateRelatorioAcesso` concentra o fluxo comum de consulta e geração, e cada
+formato especializa a apresentação. O `AdaptadorLogging` traduz o contrato
+`LoggerAplicacao` para a biblioteca padrão, sem transformar logs em fonte dos
+dados estatísticos. Os detalhes dessas decisões estão nas propostas de
+[Repository e Factory](./07-arquitetura/adr/0009-repository-e-factory-para-entidades-persistidas.md)
+e do [Adapter de logging](./07-arquitetura/adr/0010-adapter-para-logging.md).
 
 ## CRUD de usuários: validação e persistência
 
