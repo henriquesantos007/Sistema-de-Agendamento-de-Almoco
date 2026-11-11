@@ -1,6 +1,6 @@
 # ADR-0011: Gerar os relatórios de acesso com Template Method
 
-- Status: Proposto
+- Status: Aceito
 - Data: 2026-11-10
 
 ## Contexto
@@ -11,12 +11,13 @@ de acessos, quantidade de usuários distintos e detalhamento por usuário, na
 mesma ordem. O fluxo é fixo: consultar os registros de acesso, consultar login
 e perfil dos usuários, calcular as estatísticas e, por fim, formatar o
 resultado. Só o último passo varia com o formato. A Sprint 4 solicita
-demonstrar o padrão Template Method em um cenário do projeto. Ainda não há
-relatórios no código.
+demonstrar o padrão Template Method em um cenário do projeto. Até esta
+decisão, não havia relatórios no código.
 
-## Decisão proposta
+## Decisão
 
-- Definir na aplicação a classe abstrata `TemplateRelatorioAcesso`, cujo
+- Definir na aplicação, em `source/aplicacao/relatorios/`, a classe abstrata
+  `TemplateRelatorioAcesso`, cujo
   método `gerar()` fixa o fluxo: chama `obter_estatisticas()` e, com o
   resultado, `formatar(estatisticas)`.
 - Implementar `obter_estatisticas()` uma única vez na classe base, consultando
@@ -24,13 +25,11 @@ relatórios no código.
   `EstatisticasAcesso`.
 - Deixar `formatar()` abstrato e especializá-lo em `RelatorioAcessoHTML` e
   `RelatorioAcessoCSV`, que produzem um `Documento` com o conteúdo textual no
-  formato correspondente.
-- Fazer o `ServicoRelatorioAcesso` escolher a subclasse pelo formato pedido e
-  instanciá-la com os dois repositórios. Formatos diferentes de HTML e CSV são
-  recusados pelo serviço antes de qualquer consulta.
-
-Esta decisão é planejada; não significa que o template, os formatos ou o
-serviço já estejam implementados.
+  formato correspondente e o formato em minúsculas (`html` ou `csv`).
+- Fazer o `ServicoRelatorioAcesso` escolher a subclasse pelo formato pedido,
+  aceito sem diferenciar maiúsculas e com espaços nas pontas, e instanciá-la
+  com os dois repositórios. Formatos diferentes de HTML e CSV são recusados
+  pelo serviço, com `FormatoRelatorioInvalido`, antes de qualquer consulta.
 
 ## Consequências
 
@@ -38,7 +37,7 @@ serviço já estejam implementados.
   mesmo `EstatisticasAcesso`, o que sustenta a exigência de mesmos dados do
   RF17.
 - Um novo formato exige uma subclasse com `formatar()` e o registro dela no
-  serviço, sem alterar o cálculo.
+  mapa de formatos do serviço, sem alterar o cálculo.
 - As subclasses ficam acopladas à classe base por herança; mudanças no fluxo
   de `gerar()` afetam todos os formatos.
 - Os testes podem verificar o cálculo uma vez na classe base e, em cada

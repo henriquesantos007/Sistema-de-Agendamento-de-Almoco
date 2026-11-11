@@ -144,13 +144,18 @@ Cada `GestorRestaurante` deve referenciar um restaurante existente. A associaç�
 
 ---
 
-## 3. Relatórios de Acesso (planejado — Sprint 4)
+## 3. Relatórios de Acesso (Sprint 4)
 
 O UC22 está especificado na change OpenSpec
-[relatorio-de-acessos](../../openspec/changes/relatorio-de-acessos/proposal.md)
-e ainda não está implementado. O relatório é calculado sobre os registros de
-acesso disponíveis, sem filtro de período; a captura desses registros fica
-fora dessa change.
+[relatorio-de-acessos](../../openspec/changes/relatorio-de-acessos/proposal.md).
+Casos de uso marcados com ⭐ fazem parte da **Sprint 4**. O relatório é
+calculado sobre os registros de acesso disponíveis, sem filtro de período, e
+está disponível pela fachada; o cenário em `main.py` demonstra a geração em
+CSV e HTML e a recusa de um formato não suportado. A captura dos registros
+ficou fora dessa change e não existe no código, por isso em execução normal o
+relatório sai com totais zero. Como o projeto não tem autenticação, o perfil
+de quem pede o relatório não é verificado; a restrição ao Administrador é
+premissa.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -158,7 +163,7 @@ flowchart LR
     admin["🛡️ Administrador"]
 
     subgraph sistema["Sistema de Agendamento de Almoços — Relatórios de Acesso"]
-        UC22(["Consultar Relatório de Acessos"])
+        UC22(["⭐ Consultar Relatório de Acessos"])
     end
 
     admin --> UC22
@@ -166,7 +171,7 @@ flowchart LR
 
 | Caso de uso | Regra | Requisito |
 |-------------|-------|-----------|
-| **UC22 Consultar Relatório de Acessos** | Administrador consulta o total de acessos, a quantidade de usuários distintos e os acessos por usuário (id, login e perfil, sem senha nem e-mail), em HTML ou CSV. Registros de usuários removidos continuam contando, com login e perfil indicados como "usuário removido". | RF16, RF17 |
+| ⭐ **UC22 Consultar Relatório de Acessos** | Administrador consulta o total de acessos, a quantidade de usuários distintos e os acessos por usuário (id, login e perfil, sem senha nem e-mail), em HTML ou CSV. Registros de usuários removidos continuam contando, com login e perfil indicados como "usuário removido". | RF16, RF17 |
 
 ---
 
@@ -317,7 +322,7 @@ flowchart LR
 
 O diagrama inclui os casos especializados de cadastro, consulta e listagem de
 usuários, edição e remoção de usuários, validação e resumo, o relatório de
-acessos planejado (UC22), além dos fluxos de estudante,
+acessos (UC22), além dos fluxos de estudante,
 gestor, pagamento e notificações. Os diagramas de usuários, restaurantes e
 relatórios de acesso acima detalham seus respectivos subconjuntos.
 
@@ -364,10 +369,10 @@ relatórios de acesso acima detalham seus respectivos subconjuntos.
 A tabela relaciona todos os requisitos funcionais canônicos às suas
 realizações em casos de uso. RF05 é transversal: a escolha do armazenamento
 ocorre na inicialização e seus efeitos são observáveis nos casos de uso de
-cadastro e listagem das duas entidades. RF16 e RF17 ainda não são canônicos:
-estão especificados na change
-[relatorio-de-acessos](../../openspec/changes/relatorio-de-acessos/specs/relatorios-de-acesso/spec.md)
-e são planejados.
+cadastro e listagem das duas entidades. RF16 e RF17 estão implementados, mas
+ainda não são canônicos: estão especificados na change
+[relatorio-de-acessos](../../openspec/changes/relatorio-de-acessos/specs/relatorios-de-acesso/spec.md),
+que ainda não foi arquivada.
 
 | Requisito | Casos de uso relacionados |
 |-----------|---------------------------|

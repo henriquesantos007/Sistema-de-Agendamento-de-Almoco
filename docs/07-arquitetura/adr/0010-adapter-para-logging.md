@@ -1,33 +1,37 @@
 # ADR-0010: Adaptar a biblioteca de logging
 
-- Status: Proposto
+- Status: Aceito
 - Data: 2026-11-10
 
 ## Contexto
 
 A aplicação precisa registrar eventos operacionais sem acoplar suas regras a
 uma biblioteca específica de logging. A Sprint 4 solicita demonstrar o padrão
-Adapter em um cenário do projeto. Ainda não há integração de logging no código.
+Adapter em um cenário do projeto. Até esta decisão, não havia integração de
+logging no código.
 
-## Decisão proposta
+## Decisão
 
-- Definir na aplicação um contrato pequeno de logging, com os níveis e as
-  operações necessários aos eventos do sistema.
-- Implementar na infraestrutura um Adapter que implementa esse contrato e
-  delega os registros à biblioteca `logging` da biblioteca padrão do Python,
-  convertendo níveis e mensagens conforme necessário. Nos diagramas, o
-  contrato é `LoggerAplicacao` e o Adapter é `AdaptadorLogging`.
-- Configurar o Adapter na composição da aplicação, sem fazer controladores ou
-  serviços importarem diretamente a biblioteca de logging.
-- Usar como cenário inicial o registro de que um relatório foi gerado,
-  incluindo o formato e o resultado da operação. Falhas operacionais relevantes
-  também podem ser registradas.
+- Definir na aplicação um contrato pequeno de logging, `LoggerAplicacao`, em
+  `source/aplicacao/logger_aplicacao.py`, com a operação
+  `registrar(evento, detalhes, nivel)`. O terceiro parâmetro é opcional e usa a
+  enumeração `NivelEvento` (`INFORMACAO`, o padrão, `AVISO` e `ERRO`), também
+  definida na aplicação.
+- Implementar na infraestrutura um Adapter, `AdaptadorLogging`, em
+  `source/infraestrutura/logs/`, que implementa esse contrato e delega os
+  registros à biblioteca `logging` da biblioteca padrão do Python, convertendo
+  `NivelEvento` nos níveis `INFO`, `WARNING` e `ERROR`.
+- Configurar o Adapter na composição da aplicação: o `main.py` o obtém por
+  `criar_adaptador_logging()`, que configura a saída do logger da aplicação, e
+  o entrega à fachada. Controladores e serviços não importam a biblioteca de
+  logging.
+- Usar como cenário inicial o relatório de acessos. O `ServicoRelatorioAcesso`
+  registra a geração como informação, apenas com o formato normalizado; a
+  recusa de formato como aviso, sem o formato digitado, que é entrada livre; e
+  a falha de persistência durante a geração como erro.
 - Não incluir senhas, hashes, e-mails ou outros dados pessoais nas mensagens.
 - Não usar arquivos de log como fonte das estatísticas de acesso. Os relatórios
-  devem consultar os registros de acesso mantidos para esse fim.
-
-Esta integração é uma decisão planejada; não significa que o Adapter ou os
-eventos de logging já estejam implementados.
+  consultam os registros de acesso mantidos para esse fim.
 
 ## Consequências
 
@@ -39,8 +43,8 @@ eventos de logging já estejam implementados.
   cenário.
 - Os testes podem verificar os eventos enviados ao contrato sem depender da
   saída real do logger.
-- A equipe deve definir os níveis e destinos de saída necessários durante a
-  implementação, evitando registrar informações sensíveis.
+- O nível do evento faz parte do contrato; um novo nível exige alterar
+  `NivelEvento` e a conversão do Adapter.
 
 ## Alternativas consideradas
 
