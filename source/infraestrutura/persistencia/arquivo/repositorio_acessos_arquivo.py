@@ -1,8 +1,9 @@
 import json
 import os
+import threading
 from datetime import datetime
 from pathlib import Path
-from typing import List, Union
+from typing import BinaryIO, List, Union
 
 from source.dominio.acessos import (
     ErroPersistencia,
@@ -13,6 +14,7 @@ from source.dominio.acessos import (
 _CODIFICACAO = "utf-8"
 _CAMPO_USUARIO = "usuario_id"
 _CAMPO_INSTANTE = "instante"
+_QUEBRA = b"\n"
 
 
 class RepositorioAcessosArquivo(RepositorioAcessos):
@@ -25,6 +27,9 @@ class RepositorioAcessosArquivo(RepositorioAcessos):
 
     def __init__(self, caminho: Union[str, Path]) -> None:
         self._caminho = Path(caminho)
+        # Acrescimos simultaneos por handles diferentes podem se sobrescrever;
+        # a trava cobre threads deste processo, nao outros processos.
+        self._trava = threading.Lock()
 
     def registrar(self, acesso: RegistroAcesso) -> None:
         linha = json.dumps(
@@ -32,20 +37,29 @@ class RepositorioAcessosArquivo(RepositorioAcessos):
                 _CAMPO_USUARIO: acesso.usuario_id,
                 _CAMPO_INSTANTE: acesso.instante.isoformat(),
             }
-        )
+        ).encode(_CODIFICACAO)
 
         try:
-            self._caminho.parent.mkdir(parents=True, exist_ok=True)
-            with self._caminho.open(
-                "a", encoding=_CODIFICACAO, newline="\n"
-            ) as arquivo:
-                arquivo.write(linha + "\n")
-                arquivo.flush()
-                os.fsync(arquivo.fileno())
+            with self._trava:
+                self._caminho.parent.mkdir(parents=True, exist_ok=True)
+                with self._caminho.open("a+b") as arquivo:
+                    # Uma escrita interrompida deixa a ultima linha sem quebra;
+                    # o novo registro nao pode ser colado nela.
+                    separador = _QUEBRA if self._termina_sem_quebra(arquivo) else b""
+                    arquivo.write(separador + linha + _QUEBRA)
+                    arquivo.flush()
+                    os.fsync(arquivo.fileno())
         except OSError as erro:
             raise ErroPersistencia(
                 f"nao foi possivel gravar o arquivo '{self._caminho}': {erro}"
             ) from erro
+
+    @staticmethod
+    def _termina_sem_quebra(arquivo: BinaryIO) -> bool:
+        if arquivo.seek(0, os.SEEK_END) == 0:
+            return False
+        arquivo.seek(-1, os.SEEK_END)
+        return arquivo.read(1) != _QUEBRA
 
     def listar_todos(self) -> List[RegistroAcesso]:
         if not self._caminho.exists():
@@ -78,7 +92,7 @@ class RepositorioAcessosArquivo(RepositorioAcessos):
                 usuario_id=conteudo[_CAMPO_USUARIO],
                 instante=datetime.fromisoformat(instante),
             )
-        except (KeyError, ValueError) as erro:
+        except (KeyError, ValueError, RecursionError) as erro:
             raise ErroPersistencia(
                 f"arquivo '{self._caminho}' corrompido ou em formato invalido "
                 f"na linha {numero}: {erro}"

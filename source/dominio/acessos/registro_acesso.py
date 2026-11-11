@@ -23,6 +23,11 @@ class RegistroAcesso:
         if self.instante.utcoffset() is None:
             raise ValueError("o instante do acesso precisa informar o fuso horario")
 
-        object.__setattr__(
-            self, "instante", self.instante.astimezone(timezone.utc)
-        )
+        try:
+            instante_utc = self.instante.astimezone(timezone.utc)
+        except OverflowError as erro:
+            raise ValueError(
+                f"instante fora do intervalo representavel em UTC: {self.instante!r}"
+            ) from erro
+
+        object.__setattr__(self, "instante", instante_utc)

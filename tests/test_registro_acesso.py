@@ -48,3 +48,10 @@ def test_contrato_deve_oferecer_apenas_registrar_e_listar():
     assert RepositorioAcessos.__abstractmethods__ == {"registrar", "listar_todos"}
     assert not hasattr(RepositorioAcessos, "atualizar")
     assert not hasattr(RepositorioAcessos, "remover")
+
+
+def test_instante_fora_do_intervalo_em_utc_deve_ser_recusado():
+    fuso = timezone(timedelta(hours=5))
+
+    with pytest.raises(ValueError, match="instante"):
+        RegistroAcesso(usuario_id=1, instante=datetime(1, 1, 1, tzinfo=fuso))

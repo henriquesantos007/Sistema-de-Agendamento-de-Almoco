@@ -161,3 +161,23 @@ def test_csv_deve_preservar_login_com_virgula_e_aspas():
     conteudo = RelatorioAcessoCSV(acessos_de(1), usuarios).gerar().conteudo
 
     assert blocos_do_csv(conteudo)[1][1][1] == 'ana, "a" silva'
+
+
+@pytest.mark.parametrize(
+    "login",
+    ["=cmd|'/c'!A", "+SUM(A:A)", "-SUM(A:A)", "@SUM(A:A)", "\tana", "\rana"],
+)
+def test_csv_deve_neutralizar_login_que_planilhas_tratariam_como_formula(login):
+    usuarios = UsuariosCadastrados([estudante(1, login)])
+
+    conteudo = RelatorioAcessoCSV(acessos_de(1), usuarios).gerar().conteudo
+
+    assert blocos_do_csv(conteudo)[1][1][1] == "'" + login
+
+
+def test_csv_nao_deve_alterar_login_comum_nem_os_numeros():
+    usuarios = UsuariosCadastrados([estudante(1, "ana-maria")])
+
+    conteudo = RelatorioAcessoCSV(acessos_de(1), usuarios).gerar().conteudo
+
+    assert blocos_do_csv(conteudo)[1][1] == ["1", "ana-maria", "estudante", "1"]
