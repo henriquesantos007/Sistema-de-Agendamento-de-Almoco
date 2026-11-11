@@ -13,6 +13,13 @@ web, mas essa interface ainda não está implementada; os wireframes em
   funcional com mecanismos e critérios de verificação.
 - [ADR-0008 — Fachada Singleton](./adr/0008-fachada-singleton-dos-controladores.md):
   decisão de centralizar os controladores na fachada única.
+- [ADR-0009 — Repository e Factory](./adr/0009-repository-e-factory-para-entidades-persistidas.md):
+  decisão de usar contratos de repositório para usuários, restaurantes e
+  registros de acesso, criados pelo Abstract Factory `FabricaRepositorios`.
+- [ADR-0010 — Adapter para logging](./adr/0010-adapter-para-logging.md):
+  decisão de isolar a biblioteca `logging` atrás de um Adapter.
+- [ADR-0011 — Template Method para relatórios de acesso](./adr/0011-template-method-para-relatorios-de-acesso.md):
+  decisão de compartilhar o fluxo de geração dos relatórios HTML e CSV.
 
 O diagrama de classes de projeto e os padrões estão em
 [08-projeto.md](../08-projeto.md).

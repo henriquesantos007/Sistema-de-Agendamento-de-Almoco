@@ -1,6 +1,8 @@
 import threading
 from typing import Dict, List, Optional
 
+from source.aplicacao.logger_aplicacao import LoggerAplicacao
+from source.aplicacao.relatorios import Documento, ServicoRelatorioAcesso
 from source.aplicacao.restaurantes import (
     ControladorRestaurante,
     ValidadorRestaurante,
@@ -16,6 +18,7 @@ from source.aplicacao.usuarios.validador_usuario import (
     ValidadorSenha,
     ValidadorUsuario,
 )
+from source.dominio.acessos import RepositorioAcessos
 from source.dominio.restaurantes import (
     DadosRestaurante,
     RepositorioRestaurantes,
@@ -49,6 +52,8 @@ class FacadeSingletonController:
         cls,
         repositorio_usuarios: Optional[RepositorioUsuarios] = None,
         repositorio_restaurantes: Optional[RepositorioRestaurantes] = None,
+        repositorio_acessos: Optional[RepositorioAcessos] = None,
+        logger: Optional[LoggerAplicacao] = None,
     ) -> "FacadeSingletonController":
         # Copia local: um reiniciar() concorrente não pode zerar a instância
         # entre a validação e o retorno.
@@ -57,13 +62,19 @@ class FacadeSingletonController:
             with cls._trava:
                 if cls._instancia is None:
                     cls._instancia = cls._criar(
-                        repositorio_usuarios, repositorio_restaurantes
+                        repositorio_usuarios,
+                        repositorio_restaurantes,
+                        repositorio_acessos,
+                        logger,
                     )
                     return cls._instancia
                 instancia = cls._instancia
 
         instancia._validar_repositorios_inalterados(
-            repositorio_usuarios, repositorio_restaurantes
+            repositorio_usuarios,
+            repositorio_restaurantes,
+            repositorio_acessos,
+            logger,
         )
         return instancia
 
@@ -71,19 +82,23 @@ class FacadeSingletonController:
         self,
         repositorio_usuarios: Optional[RepositorioUsuarios],
         repositorio_restaurantes: Optional[RepositorioRestaurantes],
+        repositorio_acessos: Optional[RepositorioAcessos] = None,
+        logger: Optional[LoggerAplicacao] = None,
     ) -> None:
-        usuarios_alterados = (
-            repositorio_usuarios is not None
-            and repositorio_usuarios is not self._repositorio_usuarios
+        pares = (
+            (repositorio_usuarios, self._repositorio_usuarios),
+            (repositorio_restaurantes, self._repositorio_restaurantes),
+            (repositorio_acessos, self._repositorio_acessos),
+            (logger, self._logger),
         )
-        restaurantes_alterados = (
-            repositorio_restaurantes is not None
-            and repositorio_restaurantes is not self._repositorio_restaurantes
-        )
-        
-        if usuarios_alterados or restaurantes_alterados:
+
+        if any(
+            informado is not None and informado is not atual
+            for informado, atual in pares
+        ):
             raise ValueError(
-                "A fachada já foi inicializada com outros repositórios."
+                "A fachada já foi inicializada com outros repositórios "
+                "ou outro logger."
             )
 
     @classmethod
@@ -97,16 +112,26 @@ class FacadeSingletonController:
         cls,
         repositorio_usuarios: Optional[RepositorioUsuarios],
         repositorio_restaurantes: Optional[RepositorioRestaurantes],
+        repositorio_acessos: Optional[RepositorioAcessos],
+        logger: Optional[LoggerAplicacao],
     ) -> "FacadeSingletonController":
-        if repositorio_usuarios is None or repositorio_restaurantes is None:
+        dependencias = (
+            repositorio_usuarios,
+            repositorio_restaurantes,
+            repositorio_acessos,
+            logger,
+        )
+        if any(dependencia is None for dependencia in dependencias):
             raise ValueError(
                 "A primeira chamada de obter_instancia exige os repositórios "
-                "de usuários e de restaurantes."
+                "de usuários, de restaurantes e de acessos e o logger."
             )
 
         instancia = object.__new__(cls)
         instancia._repositorio_usuarios = repositorio_usuarios
         instancia._repositorio_restaurantes = repositorio_restaurantes
+        instancia._repositorio_acessos = repositorio_acessos
+        instancia._logger = logger
         instancia._controlador_usuario = ControladorUsuario(
             repositorio_usuarios,
             ValidadorUsuario([
@@ -123,6 +148,11 @@ class FacadeSingletonController:
             repositorio_restaurantes,
             ValidadorRestaurante(),
             repositorio_usuarios,
+        )
+        instancia._servico_relatorio_acesso = ServicoRelatorioAcesso(
+            repositorio_acessos,
+            repositorio_usuarios,
+            logger,
         )
         return instancia
 
@@ -171,6 +201,7 @@ class FacadeSingletonController:
         return self._controlador_restaurante.contar()
 
     def obter_contagem_por_entidade(self) -> Dict[str, int]:
+        # Registros de acesso sao eventos, nao entidades cadastradas (RF12).
         return {
             self.CHAVE_USUARIOS: self.contar_usuarios(),
             self.CHAVE_RESTAURANTES: self.contar_restaurantes(),
@@ -178,3 +209,6 @@ class FacadeSingletonController:
 
     def contar_total_entidades(self) -> int:
         return sum(self.obter_contagem_por_entidade().values())
+
+    def gerar_relatorio_acessos(self, formato: str) -> Documento:
+        return self._servico_relatorio_acesso.gerar(formato)
