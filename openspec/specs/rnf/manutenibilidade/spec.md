@@ -6,7 +6,7 @@ Garantir que os mecanismos de armazenamento (memória e arquivo) possam ser troc
 ## Requirements
 
 ### Requirement: NF-MAN-01 — Regras de negócio independentes do armazenamento
-As camadas de domínio e de aplicação NÃO DEVEM importar módulos da camada de infraestrutura; elas dependem apenas das abstrações de repositório (`RepositorioUsuarios`, `RepositorioRestaurantes` e `RepositorioAcessos`).
+As camadas de domínio e de aplicação NÃO DEVEM importar módulos da camada de infraestrutura; para acessar a persistência, dependem das abstrações de repositório (`RepositorioUsuarios`, `RepositorioRestaurantes` e `RepositorioAcessos`).
 
 **Prioridade:** Essencial
 **Casos de uso:** UC05, UC06, UC12, UC14, UC22
