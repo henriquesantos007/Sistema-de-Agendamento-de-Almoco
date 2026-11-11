@@ -13,9 +13,10 @@ Adapter em um cenário do projeto. Ainda não há integração de logging no có
 
 - Definir na aplicação um contrato pequeno de logging, com os níveis e as
   operações necessários aos eventos do sistema.
-- Implementar na infraestrutura um Adapter que recebe esse contrato e delega
-  os registros à biblioteca `logging` da biblioteca padrão do Python,
-  convertendo níveis e mensagens conforme necessário.
+- Implementar na infraestrutura um Adapter que implementa esse contrato e
+  delega os registros à biblioteca `logging` da biblioteca padrão do Python,
+  convertendo níveis e mensagens conforme necessário. Nos diagramas, o
+  contrato é `LoggerAplicacao` e o Adapter é `AdaptadorLogging`.
 - Configurar o Adapter na composição da aplicação, sem fazer controladores ou
   serviços importarem diretamente a biblioteca de logging.
 - Usar como cenário inicial o registro de que um relatório foi gerado,

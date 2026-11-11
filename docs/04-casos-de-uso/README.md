@@ -144,7 +144,33 @@ Cada `GestorRestaurante` deve referenciar um restaurante existente. A associaç�
 
 ---
 
-## 3. Visão Geral do Sistema
+## 3. Relatórios de Acesso (planejado — Sprint 4)
+
+O UC22 está especificado na change OpenSpec
+[relatorio-de-acessos](../../openspec/changes/relatorio-de-acessos/proposal.md)
+e ainda não está implementado. O relatório é calculado sobre os registros de
+acesso disponíveis, sem filtro de período; a captura desses registros fica
+fora dessa change.
+
+```mermaid
+%%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
+flowchart LR
+    admin["🛡️ Administrador"]
+
+    subgraph sistema["Sistema de Agendamento de Almoços — Relatórios de Acesso"]
+        UC22(["Consultar Relatório de Acessos"])
+    end
+
+    admin --> UC22
+```
+
+| Caso de uso | Regra | Requisito |
+|-------------|-------|-----------|
+| **UC22 Consultar Relatório de Acessos** | Administrador consulta o total de acessos, a quantidade de usuários distintos e os acessos por usuário (id, login e perfil, sem senha nem e-mail), em HTML ou CSV. Registros de usuários removidos continuam contando, com login e perfil indicados como "usuário removido". | RF16, RF17 |
+
+---
+
+## 4. Visão Geral do Sistema
 
 A principal regra de negócio está no fluxo de agendamento: **o estudante só agenda para datas cobertas por um cardápio publicado** (diário ou semanal), e o restaurante pode **informar indisponibilidade no próprio dia**, o que cancela os agendamentos afetados e notifica os estudantes. 
 
@@ -211,6 +237,7 @@ flowchart LR
             UC17(["Consultar Resumo de Entidades (UC17)"])
             UC18(["Validar Dados do Restaurante (UC18)"])
             UC19(["Verificar Gestores Vinculados (UC19)"])
+            UC22(["Consultar Relatório de Acessos (UC22)"])
         end
 
         subgraph pagamentoUC["Pagamento"]
@@ -268,6 +295,7 @@ flowchart LR
     admin --> UC15
     admin --> UC16
     admin --> UC17
+    admin --> UC22
 
     UC_CadastrarUsuario -. "«include»" .-> UC_ValidarUsuario
     UC_EditarUsuario -. "«include»" .-> UC_ValidarUsuario
@@ -288,9 +316,10 @@ flowchart LR
 ```
 
 O diagrama inclui os casos especializados de cadastro, consulta e listagem de
-usuários, edição e remoção de usuários, validação e resumo, além dos fluxos de estudante,
-gestor, pagamento e notificações. Os diagramas de usuários e restaurantes
-acima detalham seus respectivos subconjuntos.
+usuários, edição e remoção de usuários, validação e resumo, o relatório de
+acessos planejado (UC22), além dos fluxos de estudante,
+gestor, pagamento e notificações. Os diagramas de usuários, restaurantes e
+relatórios de acesso acima detalham seus respectivos subconjuntos.
 
 ### Descrição dos casos de uso ligados às regras de agendamento
 
@@ -335,7 +364,10 @@ acima detalham seus respectivos subconjuntos.
 A tabela relaciona todos os requisitos funcionais canônicos às suas
 realizações em casos de uso. RF05 é transversal: a escolha do armazenamento
 ocorre na inicialização e seus efeitos são observáveis nos casos de uso de
-cadastro e listagem das duas entidades.
+cadastro e listagem das duas entidades. RF16 e RF17 ainda não são canônicos:
+estão especificados na change
+[relatorio-de-acessos](../../openspec/changes/relatorio-de-acessos/specs/relatorios-de-acesso/spec.md)
+e são planejados.
 
 | Requisito | Casos de uso relacionados |
 |-----------|---------------------------|
@@ -354,6 +386,8 @@ cadastro e listagem das duas entidades.
 | RF13 — Consultar usuário pelo identificador | UC20 |
 | RF14 — Atualizar usuário | UC08 |
 | RF15 — Remover usuário | UC21 |
+| RF16 — Consultar estatísticas de acesso | UC22 |
+| RF17 — Gerar relatório de acessos em HTML ou CSV | UC22 |
 
 As descrições normativas e os cenários de cada requisito estão nas
 [especificações OpenSpec](../../openspec/specs/).
