@@ -1,32 +1,32 @@
 # manutenibilidade Specification
 
 ## Purpose
-Garantir que os mecanismos de armazenamento (memória e arquivo binário) possam ser trocados ou acrescentados sem alterar as regras de negócio, e que os clientes acessem os controladores por um único ponto.
+Garantir que os mecanismos de armazenamento (memória e arquivo) possam ser trocados ou acrescentados sem alterar as regras de negócio, e que os clientes acessem os controladores e o relatório de acessos por um único ponto.
 
 ## Requirements
 
 ### Requirement: NF-MAN-01 — Regras de negócio independentes do armazenamento
-As camadas de domínio e de aplicação NÃO DEVEM importar módulos da camada de infraestrutura; elas dependem apenas da abstração `RepositorioUsuarios`.
+As camadas de domínio e de aplicação NÃO DEVEM importar módulos da camada de infraestrutura; elas dependem apenas das abstrações de repositório (`RepositorioUsuarios`, `RepositorioRestaurantes` e `RepositorioAcessos`).
 
 **Prioridade:** Essencial
-**Casos de uso:** UC05, UC06, UC12, UC14
+**Casos de uso:** UC05, UC06, UC12, UC14, UC22
 
 #### Scenario: Nenhuma importação de infraestrutura
 - **WHEN** se procura por importações de `source.infraestrutura` dentro de `source/dominio/` e `source/aplicacao/`
 - **THEN** são encontradas 0 importações
 
 #### Scenario: Escolha do armazenamento em um único ponto
-- **WHEN** se procura onde as classes `RepositorioUsuariosMemoria`, `RepositorioUsuariosArquivo`, `RepositorioRestaurantesMemoria` e `RepositorioRestaurantesArquivo` são instanciadas no código de produção
-- **THEN** todas são instanciadas em 1 único módulo: `source/infraestrutura/persistencia/fabrica_repositorio.py`
+- **WHEN** se procura onde as classes `RepositorioUsuariosMemoria`, `RepositorioUsuariosArquivo`, `RepositorioRestaurantesMemoria`, `RepositorioRestaurantesArquivo`, `RepositorioAcessosMemoria` e `RepositorioAcessosArquivo` são instanciadas no código de produção
+- **THEN** todas são instanciadas em 1 único módulo: `source/infraestrutura/persistencia/fabrica_repositorios.py`
 
 ### Requirement: NF-MAN-02 — Acesso aos controladores por uma fachada única
-O sistema DEVE expor as operações de usuários e de restaurantes por uma única fachada (`FacadeSingletonController`), com exatamente 1 instância por execução, e os controladores NÃO DEVEM ser instanciados fora dela.
+O sistema DEVE expor as operações de usuários, de restaurantes e o relatório de acessos por uma única fachada (`FacadeSingletonController`), com exatamente 1 instância por execução, e os controladores e o serviço de relatório NÃO DEVEM ser instanciados fora dela.
 
 **Prioridade:** Essencial
-**Casos de uso:** UC05, UC06, UC12, UC13, UC14, UC15, UC16, UC17
+**Casos de uso:** UC05, UC06, UC12, UC13, UC14, UC15, UC16, UC17, UC22
 
 #### Scenario: Mesma instância em todas as chamadas
-- **GIVEN** a fachada foi obtida com `obter_instancia(repositorio_usuarios, repositorio_restaurantes)`
+- **GIVEN** a fachada foi obtida com `obter_instancia(repositorio_usuarios, repositorio_restaurantes, repositorio_acessos, logger)`
 - **WHEN** `obter_instancia()` é chamado de novo, sem argumentos
 - **THEN** o mesmo objeto é devolvido, e o sistema exibe "Mesma instância da fachada: True"
 
@@ -35,6 +35,6 @@ O sistema DEVE expor as operações de usuários e de restaurantes por uma únic
 - **THEN** ocorre 1 `TypeError` com a mensagem "Use FacadeSingletonController.obter_instancia(...) em vez de instanciar diretamente."
 
 #### Scenario: Controladores encapsulados na fachada
-- **WHEN** se procura onde `ControladorUsuario` e `ControladorRestaurante` são instanciados no código de produção
+- **WHEN** se procura onde `ControladorUsuario`, `ControladorRestaurante` e `ServicoRelatorioAcesso` são instanciados no código de produção
 - **THEN** existe exatamente 1 ponto: `source/aplicacao/fachada/facade_singleton_controller.py`
 - **AND** o `main.py` importa 0 controladores
