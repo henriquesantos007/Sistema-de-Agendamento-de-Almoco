@@ -2,6 +2,7 @@ import argparse
 from datetime import time
 
 from source.aplicacao.fachada import FacadeSingletonController
+from source.aplicacao.relatorios import FormatoRelatorioInvalido
 from source.aplicacao.restaurantes import (
     DadosRestauranteInvalidos,
     RestauranteVinculado,
@@ -9,6 +10,7 @@ from source.aplicacao.restaurantes import (
 from source.aplicacao.usuarios import DadosUsuario, DadosUsuarioInvalidos
 from source.dominio.excecoes import ErroPersistenciaBase
 from source.dominio.restaurantes import DadosRestaurante
+from source.infraestrutura.logs import criar_adaptador_logging
 from source.infraestrutura.persistencia.fabrica_repositorios import (
     FabricaRepositorios,
     FabricaRepositoriosArquivo,
@@ -38,6 +40,11 @@ def ler_argumentos() -> argparse.Namespace:
         default=None,
         help="Arquivo de restaurantes (padrão: dados/restaurantes.bin)",
     )
+    parser.add_argument(
+        "--caminho-acessos",
+        default=None,
+        help="Arquivo de registros de acesso (padrão: dados/acessos.jsonl)",
+    )
     return parser.parse_args()
 
 
@@ -46,6 +53,7 @@ def escolher_fabrica(argumentos: argparse.Namespace) -> FabricaRepositorios:
         return FabricaRepositoriosArquivo(
             caminho_usuarios=argumentos.caminho,
             caminho_restaurantes=argumentos.caminho_restaurantes,
+            caminho_acessos=argumentos.caminho_acessos,
         )
     return FabricaRepositoriosMemoria()
 
@@ -109,6 +117,17 @@ def tentar_remover_restaurante(fachada: FacadeSingletonController, restaurante_i
         print(f"Remoção recusada: {erro}")
     except ErroPersistenciaBase as erro:
         print(f"Falha de persistência ao remover o restaurante: {erro}")
+
+
+def tentar_gerar_relatorio_acessos(fachada: FacadeSingletonController, formato: str) -> None:
+    try:
+        documento = fachada.gerar_relatorio_acessos(formato)
+        print(f"Relatório de acessos em {documento.formato.upper()}:")
+        print(documento.conteudo)
+    except FormatoRelatorioInvalido as erro:
+        print(f"Relatório de acessos em '{formato}' recusado: {erro}")
+    except ErroPersistenciaBase as erro:
+        print(f"Falha de persistência ao gerar o relatório de acessos: {erro}")
 
 
 def executar_cenario_demonstracao(fachada: FacadeSingletonController) -> None:
@@ -213,6 +232,11 @@ def exibir_relatorio_final(fachada: FacadeSingletonController) -> None:
     print(f"Restaurantes cadastrados: {fachada.contar_restaurantes()}")
     print(f"Total de entidades cadastradas: {fachada.contar_total_entidades()}")
 
+    print("\n--- Relatório de Acessos ---")
+    tentar_gerar_relatorio_acessos(fachada, "csv")
+    tentar_gerar_relatorio_acessos(fachada, "html")
+    tentar_gerar_relatorio_acessos(fachada, "pdf")
+
 
 def main():
     argumentos = ler_argumentos()
@@ -223,6 +247,8 @@ def main():
         fachada = FacadeSingletonController.obter_instancia(
             fabrica.criar_repositorio_usuarios(),
             fabrica.criar_repositorio_restaurantes(),
+            fabrica.criar_repositorio_acessos(),
+            criar_adaptador_logging(),
         )
     except ErroPersistenciaBase as erro:
         print(f"Não foi possível iniciar o armazenamento: {erro}")
