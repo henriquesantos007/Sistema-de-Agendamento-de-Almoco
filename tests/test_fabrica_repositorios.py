@@ -1,9 +1,11 @@
-from datetime import time
+from datetime import datetime, time, timezone
 
 import pytest
 
+from source.dominio.acessos import RegistroAcesso
 from source.dominio.restaurantes import DadosRestaurante, Restaurante
 from source.infraestrutura.persistencia.arquivo import (
+    RepositorioAcessosArquivo,
     RepositorioRestaurantesArquivo,
     RepositorioUsuariosArquivo,
 )
@@ -13,9 +15,49 @@ from source.infraestrutura.persistencia.fabrica_repositorios import (
     FabricaRepositoriosMemoria,
 )
 from source.infraestrutura.persistencia.memoria import (
+    RepositorioAcessosMemoria,
     RepositorioRestaurantesMemoria,
     RepositorioUsuariosMemoria,
 )
+
+
+def registro_de_acesso():
+    return RegistroAcesso(
+        usuario_id=1,
+        instante=datetime(2026, 11, 10, 12, 0, tzinfo=timezone.utc),
+    )
+
+
+def test_fabrica_de_memoria_deve_criar_repositorio_de_acessos_em_memoria():
+    assert isinstance(
+        FabricaRepositoriosMemoria().criar_repositorio_acessos(),
+        RepositorioAcessosMemoria,
+    )
+
+
+def test_fabrica_de_arquivo_deve_criar_repositorio_de_acessos_no_caminho(
+    tmp_path,
+):
+    caminho = tmp_path / "acessos.jsonl"
+    repositorio = FabricaRepositoriosArquivo(
+        caminho_acessos=caminho
+    ).criar_repositorio_acessos()
+
+    repositorio.registrar(registro_de_acesso())
+
+    assert isinstance(repositorio, RepositorioAcessosArquivo)
+    assert caminho.exists()
+
+
+def test_fabrica_de_arquivo_deve_usar_caminho_padrao_de_acessos(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    repositorio = FabricaRepositoriosArquivo().criar_repositorio_acessos()
+
+    repositorio.registrar(registro_de_acesso())
+
+    assert (tmp_path / "dados" / "acessos.jsonl").exists()
 
 
 def test_fabrica_abstrata_nao_deve_ser_instanciada():
