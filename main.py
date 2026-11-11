@@ -9,11 +9,15 @@ from source.aplicacao.restaurantes import (
 from source.aplicacao.usuarios import DadosUsuario, DadosUsuarioInvalidos
 from source.dominio.excecoes import ErroPersistenciaBase
 from source.dominio.restaurantes import DadosRestaurante
-from source.infraestrutura.persistencia.fabrica_repositorio import (
-    ARMAZENAMENTOS,
-    criar_repositorio_restaurantes,
-    criar_repositorio_usuarios,
+from source.infraestrutura.persistencia.fabrica_repositorios import (
+    FabricaRepositorios,
+    FabricaRepositoriosArquivo,
+    FabricaRepositoriosMemoria,
 )
+
+ARMAZENAMENTO_MEMORIA = "memoria"
+ARMAZENAMENTO_ARQUIVO = "arquivo"
+ARMAZENAMENTOS = (ARMAZENAMENTO_MEMORIA, ARMAZENAMENTO_ARQUIVO)
 
 
 def ler_argumentos() -> argparse.Namespace:
@@ -21,7 +25,7 @@ def ler_argumentos() -> argparse.Namespace:
     parser.add_argument(
         "--armazenamento",
         choices=ARMAZENAMENTOS,
-        default="memoria",
+        default=ARMAZENAMENTO_MEMORIA,
         help="Mecanismo de persistência (padrão: memoria)",
     )
     parser.add_argument(
@@ -35,6 +39,15 @@ def ler_argumentos() -> argparse.Namespace:
         help="Arquivo de restaurantes (padrão: dados/restaurantes.bin)",
     )
     return parser.parse_args()
+
+
+def escolher_fabrica(argumentos: argparse.Namespace) -> FabricaRepositorios:
+    if argumentos.armazenamento == ARMAZENAMENTO_ARQUIVO:
+        return FabricaRepositoriosArquivo(
+            caminho_usuarios=argumentos.caminho,
+            caminho_restaurantes=argumentos.caminho_restaurantes,
+        )
+    return FabricaRepositoriosMemoria()
 
 
 def tentar_cadastrar_usuario(fachada: FacadeSingletonController, dados: DadosUsuario) -> None:
@@ -204,12 +217,12 @@ def exibir_relatorio_final(fachada: FacadeSingletonController) -> None:
 def main():
     argumentos = ler_argumentos()
 
+    fabrica = escolher_fabrica(argumentos)
+
     try:
         fachada = FacadeSingletonController.obter_instancia(
-            criar_repositorio_usuarios(argumentos.armazenamento, argumentos.caminho),
-            criar_repositorio_restaurantes(
-                argumentos.armazenamento, argumentos.caminho_restaurantes
-            ),
+            fabrica.criar_repositorio_usuarios(),
+            fabrica.criar_repositorio_restaurantes(),
         )
     except ErroPersistenciaBase as erro:
         print(f"Não foi possível iniciar o armazenamento: {erro}")
