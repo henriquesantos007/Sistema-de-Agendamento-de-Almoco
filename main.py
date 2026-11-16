@@ -293,6 +293,110 @@ def exibir_relatorio_final(fachada: FacadeSingletonController) -> None:
     print(f"Total de entidades cadastradas: {fachada.contar_total_entidades()}")
 
 
+
+# MENUS INTERATIVOS
+
+def menu_interativo_usuarios(fachada: FacadeSingletonController) -> None:
+    while True:
+        print("\n--- GERENCIAR USUÁRIOS ---")
+        print("[ 1 ] Listar Todos")
+        print("[ 2 ] Cadastrar Novo")
+        print("[ 3 ] Buscar por ID")
+        print("[ 4 ] Atualizar Existente")
+        print("[ 5 ] Remover")
+        print("[ 0 ] Voltar ao Menu Principal")
+        
+        opcao = input("Escolha uma opção: ").strip()
+
+        if opcao == '0':
+            break
+            
+        elif opcao == '1':
+            print("\nUsuários cadastrados:")
+            for u in fachada.listar_usuarios():
+                print(f"  [{u.id}] {u.nome} ({u.perfil})")
+
+        elif opcao == '2':
+            # Lógica de cadastro (reaproveitada do que você já possui)
+            print("\n(Funcionalidade de cadastro conectada aqui...)")
+
+        elif opcao == '3':
+            id_busca = int(input("\nID do usuário: "))
+            try:
+                usuario = fachada.buscar_usuario(id_busca)
+                imprimir_detalhes_usuario(usuario, titulo=f"Detalhes do Usuário {usuario.id}:")
+            except ValueError as e:
+                print(f"Erro: {e}")
+
+        elif opcao == '4':
+            try:
+                id_atualizar = int(input("\nID do usuário a atualizar: "))
+                usr = fachada.buscar_usuario(id_atualizar)
+                
+                print(f"\nAtualizando: {usr.nome}")
+                print("(Pressione ENTER para manter o valor atual)")
+                
+                # Atualização Inteligente: Se bater ENTER, mantém usr.campo
+                novo_nome = input(f"Nome [{usr.nome}]: ").strip() or usr.nome
+                novo_email = input(f"E-mail [{usr.email}]: ").strip() or usr.email
+                novo_tel = input(f"Telefone [{formatar_telefone(usr.telefone)}]: ").strip() or usr.telefone
+                nova_senha = input("Nova Senha [***]: ").strip() or getattr(usr, 'senha', '')
+                
+                dados_atualizados = DadosUsuario(
+                    perfil=usr.perfil,  # Imutável via edição básica
+                    nome=novo_nome,
+                    login=usr.login,    # Imutável via edição básica
+                    email=novo_email,
+                    senha=nova_senha,
+                    telefone=novo_tel,
+                    matricula=getattr(usr, 'matricula', None),
+                    restaurante_id=getattr(usr, 'restaurante_id', None)
+                )
+                
+                fachada.atualizar_usuario(id_atualizar, dados_atualizados)
+                print("\nUsuário atualizado com sucesso!")
+            except ValueError as e:
+                print(f"\nErro na atualização: {e}")
+
+        elif opcao == '5':
+            try:
+                id_remover = int(input("\nID do usuário a remover: "))
+                fachada.remover_usuario(id_remover)
+                print("Usuário removido.")
+            except ValueError as e:
+                print(f"Erro: {e}")
+        else:
+            print("Opção inválida.")
+
+
+def menu_interativo_restaurantes(fachada: FacadeSingletonController) -> None:
+    # A estrutura aqui será idêntica à de usuários, chamando os métodos de Restaurante
+    print("\n(Submenu de Restaurantes em construção...)")
+
+
+def menu_principal(fachada: FacadeSingletonController) -> None:
+    while True:
+        print("\n" + "="*40)
+        print("       SISTEMA GESTOR DE ALMOÇOS")
+        print("="*40)
+        print("[ 1 ] Gerenciar Usuários")
+        print("[ 2 ] Gerenciar Restaurantes")
+        print("[ 0 ] Sair do Sistema")
+        print("="*40)
+        
+        opcao = input("Escolha uma opção: ").strip()
+        
+        if opcao == '0':
+            print("Saindo...")
+            break
+        elif opcao == '1':
+            menu_interativo_usuarios(fachada)
+        elif opcao == '2':
+            menu_interativo_restaurantes(fachada)
+        else:
+            print("Opção inválida!")
+
+
 def main():
     argumentos = ler_argumentos()
 
@@ -314,6 +418,8 @@ def main():
 
     executar_cenario_demonstracao(fachada)
     exibir_relatorio_final(fachada)
+
+    menu_principal(fachada)
 
 
 if __name__ == "__main__":
