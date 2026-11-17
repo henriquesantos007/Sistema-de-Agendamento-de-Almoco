@@ -36,6 +36,8 @@ class FacadeSingletonController:
     _instancia: Optional["FacadeSingletonController"] = None
     _trava = threading.Lock()
 
+    _ultimo_comando_desfazivel: Optional[Comando]
+
     def __new__(cls, *args, **kwargs):
         raise TypeError(
             "Use FacadeSingletonController.obter_instancia(...) "
@@ -156,7 +158,8 @@ class FacadeSingletonController:
             repositorio_usuarios,
             logger,
         )
-        instancia._ultimo_comando_desfazivel: Optional[Comando] = None
+        instancia._ultimo_comando_desfazivel = None
+        
         return instancia
 
     def cadastrar_usuario(self, dados: DadosUsuario) -> Usuario:
