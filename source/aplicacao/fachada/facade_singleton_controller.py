@@ -18,6 +18,8 @@ from source.aplicacao.usuarios.validador_usuario import (
     ValidadorSenha,
     ValidadorUsuario,
 )
+from source.aplicacao.comandos.comando import Comando
+from source.aplicacao.comandos.comando_atualizar_usuario import ComandoAtualizarUsuario
 from source.dominio.acessos import RepositorioAcessos
 from source.dominio.restaurantes import (
     DadosRestaurante,
@@ -154,6 +156,7 @@ class FacadeSingletonController:
             repositorio_usuarios,
             logger,
         )
+        instancia._ultimo_comando_desfazivel: Optional[Comando] = None
         return instancia
 
     def cadastrar_usuario(self, dados: DadosUsuario) -> Usuario:
@@ -170,7 +173,34 @@ class FacadeSingletonController:
         usuario_id: int,
         dados: DadosUsuario,
     ) -> Usuario:
-        return self._controlador_usuario.atualizar(usuario_id, dados)
+        # Encapsula a requisição e a intenção no padrão Command
+        comando = ComandoAtualizarUsuario(
+            controlador=self._controlador_usuario, 
+            repositorio=self._repositorio_usuarios, 
+            id_usuario=usuario_id, 
+            dados_novos=dados
+        )
+
+        # Executa a ação (Invocador)
+        usuario_atualizado = comando.executar()
+        
+        # Guarda o comando no histórico para permitir o 'undo' (Zelador)
+        self._ultimo_comando_desfazivel = comando
+
+        return usuario_atualizado
+
+    def desfazer_ultima_atualizacao_usuario(self) -> bool:
+        """
+        Desfaz a última atualização realizada na entidade Usuário.
+        Retorna True se houve sucesso, ou False se não havia o que desfazer.
+        """
+        if self._ultimo_comando_desfazivel:
+            self._ultimo_comando_desfazivel.desfazer()
+            # Limpa o histórico após desfazer, pois o requisito exige apenas desfazer a última
+            self._ultimo_comando_desfazivel = None
+            return True
+            
+        return False
 
     def remover_usuario(self, usuario_id: int) -> None:
         self._controlador_usuario.remover(usuario_id)
