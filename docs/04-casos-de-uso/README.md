@@ -377,11 +377,10 @@ relatórios de acesso acima detalham seus respectivos subconjuntos.
 A tabela relaciona os requisitos funcionais às suas realizações em casos de
 uso. RF05 é transversal: a escolha do armazenamento ocorre na inicialização e
 seus efeitos são observáveis nos casos de uso de cadastro e listagem das duas
-entidades. RF16 e RF17 estão implementados e canônicos em
-[relatorios-de-acesso](../../openspec/specs/relatorios-de-acesso/spec.md); a
-change correspondente foi arquivada. RF18 está especificado na change ativa
-[desfazer-atualizacao](../../openspec/changes/desfazer-atualizacao/specs/usuarios/spec.md)
-e ainda não integra a especificação canônica.
+entidades. RF16–RF18 estão implementados e especificados canonicamente em
+[relatórios de acesso](../../openspec/specs/relatorios-de-acesso/spec.md) e
+[usuários](../../openspec/specs/usuarios/spec.md); as changes correspondentes
+foram arquivadas.
 
 | Requisito | Casos de uso relacionados |
 |-----------|---------------------------|
