@@ -90,3 +90,64 @@ def test_nao_deve_desfazer_se_o_historico_estiver_vazio(fachada_configurada):
     # ==========================================
     # Deve retornar False graciosamente, sem quebrar o sistema
     assert resultado is False
+
+
+def test_deve_desfazer_somente_a_ultima_de_duas_atualizacoes(fachada_configurada):
+    fachada = fachada_configurada
+    usuario = fachada.cadastrar_usuario(DadosUsuario(
+        perfil="estudante", nome="Ana Original", login="anasilva",
+        email="ana@example.com", senha="Senha@123",
+        telefone="83999999999", matricula="2026001"
+    ))
+
+    dados_primeira_atualizacao = DadosUsuario(
+        perfil="estudante", nome="Ana Primeira", login="anasilva",
+        email="ana.primeira@example.com", senha="Senha@123",
+        telefone="83900000000", matricula="2026001"
+    )
+    dados_segunda_atualizacao = DadosUsuario(
+        perfil="estudante", nome="Ana Segunda", login="anasilva",
+        email="ana.segunda@example.com", senha="Senha@123",
+        telefone="83911111111", matricula="2026001"
+    )
+
+    fachada.atualizar_usuario(usuario.id, dados_primeira_atualizacao)
+    fachada.atualizar_usuario(usuario.id, dados_segunda_atualizacao)
+
+    assert fachada.desfazer_ultima_atualizacao_usuario() is True
+    usuario_revertido = fachada.buscar_usuario(usuario.id)
+    assert usuario_revertido.nome == "Ana Primeira"
+    assert usuario_revertido.email == "ana.primeira@example.com"
+    assert usuario_revertido.telefone == "83900000000"
+
+    assert fachada.desfazer_ultima_atualizacao_usuario() is False
+    assert fachada.buscar_usuario(usuario.id).nome == "Ana Primeira"
+
+
+def test_atualizacao_invalida_nao_descarta_historico_da_ultima_atualizacao_valida(
+    fachada_configurada,
+):
+    fachada = fachada_configurada
+    usuario = fachada.cadastrar_usuario(DadosUsuario(
+        perfil="estudante", nome="Ana Original", login="anasilva",
+        email="ana@example.com", senha="Senha@123",
+        telefone="83999999999", matricula="2026001"
+    ))
+    dados_atualizados = DadosUsuario(
+        perfil="estudante", nome="Ana Modificada", login="anasilva",
+        email="ana.mod@example.com", senha="Senha@123",
+        telefone="83900000000", matricula="2026001"
+    )
+    dados_invalidos = DadosUsuario(
+        perfil="estudante", nome="", login="anasilva",
+        email="ana.invalid@example.com", senha="Senha@123",
+        telefone="83900000000", matricula="2026001"
+    )
+    fachada.atualizar_usuario(usuario.id, dados_atualizados)
+
+    with pytest.raises(ValueError, match="Erros de validação"):
+        fachada.atualizar_usuario(usuario.id, dados_invalidos)
+
+    assert fachada.buscar_usuario(usuario.id).nome == "Ana Modificada"
+    assert fachada.desfazer_ultima_atualizacao_usuario() is True
+    assert fachada.buscar_usuario(usuario.id).nome == "Ana Original"

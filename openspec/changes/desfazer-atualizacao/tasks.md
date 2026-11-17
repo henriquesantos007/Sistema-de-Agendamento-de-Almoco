@@ -6,8 +6,9 @@
   (`feat(cli)`).
 - [x] Cobrir com teste de integração o desfazimento bem-sucedido e a ausência
   de histórico disponível (`test(usuarios)`).
-- [ ] Cobrir que duas atualizações consecutivas permitem desfazer somente a
-  mais recente (`test(usuarios)`).
+- [x] Cobrir que duas atualizações consecutivas permitem desfazer somente a
+  mais recente e que uma atualização inválida não descarta o histórico válido
+  (`test(usuarios)`).
 - [x] Registrar os padrões Command e Memento na ADR e na documentação do
   projeto (`docs(arquitetura)`).
 - [x] Incluir UC23 no catálogo e na matriz de rastreabilidade de casos de uso
