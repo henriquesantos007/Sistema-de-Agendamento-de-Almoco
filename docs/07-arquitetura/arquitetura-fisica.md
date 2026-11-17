@@ -15,7 +15,7 @@ flowchart LR
     subgraph Host["Computador local — Windows ou Linux"]
         Python["Interpretador Python 3.10+<br/>processo main.py"]
         Main["main.py + source/"]
-        Dados["Sistema de arquivos local<br/>dados/usuarios.bin<br/>dados/restaurantes.bin"]
+        Dados["Sistema de arquivos local<br/>dados/usuarios.bin<br/>dados/restaurantes.bin<br/>dados/acessos.jsonl"]
         Python --> Main
         Main --> Dados
     end
@@ -31,20 +31,24 @@ flowchart LR
 | Processo da aplicação | `python main.py` | Executa CLI, fachada, regras e persistência no mesmo processo. |
 | Código | `main.py` e diretório `source/` | Módulos Python empacotados no repositório; usa biblioteca padrão. |
 | Persistência em memória | Processo Python | Mantém os registros apenas durante a execução. |
-| Persistência em arquivo | `dados/usuarios.bin` e `dados/restaurantes.bin` | Arquivos binários locais, separados por entidade. São carregados no início e regravados durante as operações. |
+| Persistência em arquivo | `dados/usuarios.bin`, `dados/restaurantes.bin` e `dados/acessos.jsonl` | Usuários e restaurantes ficam em arquivos binários, carregados no início e regravados durante as operações. Os registros de acesso ficam em texto, uma linha JSON por registro, gravados por acréscimo e lidos quando o relatório é gerado. |
+| Log operacional | Saída de erro padrão do processo | O `AdaptadorLogging` escreve os eventos do relatório de acessos pelo módulo `logging`; não há arquivo de log. |
 | Testes | Diretório `tests/` | Executados com `python -m pytest`; `pytest` é dependência de desenvolvimento, não requisito para executar o sistema. |
 
 O armazenamento padrão é memória. Com `--armazenamento arquivo`, os arquivos
-padrão são `dados/usuarios.bin` e `dados/restaurantes.bin`; `--caminho` e
-`--caminho-restaurantes` permitem definir caminhos próprios. O processo precisa
+padrão são `dados/usuarios.bin`, `dados/restaurantes.bin` e
+`dados/acessos.jsonl`; `--caminho`, `--caminho-restaurantes` e
+`--caminho-acessos` permitem definir caminhos próprios. O processo precisa
 de permissão de leitura e gravação no diretório escolhido.
 
-Os repositórios em arquivo gravam primeiro em um arquivo temporário e usam
-substituição atômica do arquivo de destino. Falhas são convertidas no
-`ErroPersistencia` específico do domínio de usuários ou restaurantes; ambas as
-classes herdam de `ErroPersistenciaBase`, que o `main.py` captura para
+Os repositórios em arquivo de usuários e restaurantes gravam primeiro em um
+arquivo temporário e usam substituição atômica do arquivo de destino. O de
+acessos acrescenta uma linha ao fim do arquivo, sob uma trava que cobre só as
+threads do processo. Falhas são convertidas no `ErroPersistencia` específico
+do domínio de usuários, restaurantes ou acessos; todas essas classes herdam de
+`ErroPersistenciaBase`, que o `main.py` captura para
 apresentar falhas de inicialização e das operações do CLI sem expor traceback.
-Os arquivos usam `pickle` e devem ser tratados como dados confiáveis gerados
+Os arquivos de usuários e restaurantes usam `pickle` e devem ser tratados como dados confiáveis gerados
 pela própria aplicação, não como entrada de terceiros.
 
 ## Limites de implantação

@@ -12,9 +12,16 @@ Regras de comunicação respeitadas: **Ator ↔ Fronteira ↔ Controle ↔ Entid
 
 ---
 
-## 1. Gerenciamento de Usuários (Sprint 1)
+## 1. Gerenciamento de Usuários e Restaurantes (Sprint 1 e Sprint 3)
 
-Cobre os casos de uso **Cadastrar Usuário**, **Cadastrar-se como Estudante** e **Listar Usuários**. Na Sprint 1, `RepositorioUsuarios` guarda os usuários numa coleção em **memória RAM**.
+Cobre o CRUD das duas entidades implementadas até a Sprint 3, incluindo o
+cadastro de usuário por Administrador ou Estudante, a gestão de usuários e
+restaurantes, e a contagem consolidada. A `FacadeSingletonController` é o
+ponto de entrada único para os controladores; os repositórios podem usar
+implementações em memória ou em arquivo.
+
+As classes de fronteira representam interações conceituais; a interface
+executável atual continua sendo a CLI de `main.py`.
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
@@ -35,30 +42,99 @@ classDiagram
         +exibirUsuarios(usuarios: List~Usuario~)
     }
 
+    class TelaGerenciamentoUsuario {
+        <<Boundary>>
+        +consultar(usuarioId: int)
+        +exibirUsuario(usuario: Usuario)
+        +editar(usuarioId: int, dados: DadosUsuario)
+        +remover(usuarioId: int)
+        +exibirResultado(mensagem: String)
+        +exibirErros(erros: List~String~)
+    }
+
+    class TelaGerenciamentoRestaurante {
+        <<Boundary>>
+        +cadastrar(dados: DadosRestaurante)
+        +consultar(restauranteId: int)
+        +listar()
+        +atualizar(restauranteId: int, dados: DadosRestaurante)
+        +remover(restauranteId: int)
+        +exibirResultado(mensagem: String)
+    }
+
+    class FacadeSingletonController {
+        <<Facade>>
+        -instancia: FacadeSingletonController$
+        +obter_instancia(repositorio_usuarios, repositorio_restaurantes) FacadeSingletonController$
+        +cadastrar_usuario(dados: DadosUsuario) Usuario
+        +listar_usuarios() List~Usuario~
+        +buscar_usuario(usuario_id: int) Usuario
+        +atualizar_usuario(usuario_id: int, dados: DadosUsuario) Usuario
+        +remover_usuario(usuario_id: int)
+        +cadastrar_restaurante(dados: DadosRestaurante) Restaurante
+        +buscar_restaurante(restaurante_id: int) Restaurante
+        +listar_restaurantes() List~Restaurante~
+        +atualizar_restaurante(restaurante_id: int, dados: DadosRestaurante) Restaurante
+        +remover_restaurante(restaurante_id: int) boolean
+        +contar_usuarios() int
+        +contar_restaurantes() int
+        +contar_total_entidades() int
+    }
+
     class ControladorUsuario {
         <<Control>>
-        +cadastrarUsuario(dados: DadosUsuario) Usuario
-        +listarUsuarios() List~Usuario~
+        +cadastrar(dados: DadosUsuario) Usuario
+        +listar_todos() List~Usuario~
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(id_usuario: int, dados_atualizados: DadosUsuario) Usuario
+        +remover(id_usuario: int)
+    }
+
+    class ControladorRestaurante {
+        <<Control>>
+        +cadastrar(dados: DadosRestaurante) Restaurante
+        +buscar_por_id(restaurante_id: int) Restaurante
+        +listar_todos() List~Restaurante~
+        +atualizar(restaurante_id: int, dados: DadosRestaurante) Restaurante
+        +remover(restaurante_id: int) boolean
+        +contar() int
     }
 
     class ValidadorUsuario {
         <<Control>>
-        +validar(dados: DadosUsuario) List~String~
-        -emailEhValido(email: String) boolean
-        -loginJaCadastrado(login: String) boolean
-        -emailJaCadastrado(email: String) boolean
-        -matriculaJaCadastrada(matricula: String) boolean
+        +validar(dados: DadosUsuario, repositorio: RepositorioUsuarios, id_ignorado: Optional~int~) List~String~
+    }
+
+    class ValidadorRestaurante {
+        <<Control>>
+        +validar(dados: DadosRestaurante) List~String~
     }
 
     class RepositorioUsuarios {
         <<Entity>>
         -usuarios: List~Usuario~
-        -proximoId: Long
+        -proximo_id: int
         +adicionar(usuario: Usuario) Usuario
-        +listarTodos() List~Usuario~
-        +buscarPorEmail(email: String) Usuario
-        +existeLogin(login: String) boolean
-        +existeMatricula(matricula: String) boolean
+        +listar_todos() List~Usuario~
+        +buscar_por_email(email: String) Usuario
+        +buscar_por_id(id_usuario: int) Usuario
+        +atualizar(usuario_atualizado: Usuario) Usuario
+        +remover(id_usuario: int)
+        +existe_login(login: String, id_ignorado: Optional~int~) boolean
+        +existe_matricula(matricula: String, id_ignorado: Optional~int~) boolean
+        +existe_telefone(telefone: String, id_ignorado: Optional~int~) boolean
+        +contar() int
+    }
+
+    class RepositorioRestaurantes {
+        <<Entity>>
+        -restaurantes: List~Restaurante~
+        +adicionar(restaurante: Restaurante) Restaurante
+        +buscar_por_id(restaurante_id: int) Restaurante
+        +listar_todos() List~Restaurante~
+        +atualizar(restaurante: Restaurante) Restaurante
+        +remover(restaurante_id: int) boolean
+        +contar() int
     }
 
     class Usuario {
@@ -86,16 +162,43 @@ classDiagram
         <<Entity>>
     }
 
-    TelaCadastroUsuario --> ControladorUsuario : solicita cadastro
-    TelaListagemUsuarios --> ControladorUsuario : solicita listagem
+    class Restaurante {
+        <<Entity>>
+        -id: Long
+        -nome: String
+        -localizacao: String
+        -telefone: String
+        -horarioLimiteAgendamento: Time
+        -status: StatusRestaurante
+    }
+
+    TelaCadastroUsuario --> FacadeSingletonController : solicita cadastro
+    TelaListagemUsuarios --> FacadeSingletonController : solicita listagem
+    TelaGerenciamentoUsuario --> FacadeSingletonController : consulta / edita / remove
+    TelaGerenciamentoRestaurante --> FacadeSingletonController : CRUD
+    FacadeSingletonController --> FacadeSingletonController : instância única
+    FacadeSingletonController --> ControladorUsuario : delega
+    FacadeSingletonController --> ControladorRestaurante : delega
+    FacadeSingletonController --> RepositorioUsuarios : recebe
+    FacadeSingletonController --> RepositorioRestaurantes : recebe
     ControladorUsuario --> ValidadorUsuario : valida dados
-    ControladorUsuario --> RepositorioUsuarios : adiciona / lista
+    ControladorUsuario --> RepositorioUsuarios : CRUD / conta
     ValidadorUsuario --> RepositorioUsuarios : consulta unicidade
+    ControladorRestaurante --> ValidadorRestaurante : valida dados
+    ControladorRestaurante --> RepositorioRestaurantes : CRUD / conta
+    ControladorRestaurante --> RepositorioUsuarios : verifica vínculos
     RepositorioUsuarios o-- "0..*" Usuario : armazena
+    RepositorioRestaurantes o-- "0..*" Restaurante : armazena
     Usuario <|-- Estudante
     Usuario <|-- GestorRestaurante
     Usuario <|-- Administrador
+    GestorRestaurante --> Restaurante : vincula por ID
 ```
+
+Os diagramas de colaboração a seguir detalham o fluxo do controlador de
+usuários; a chamada à fachada é omitida neles para destacar a validação e a
+persistência. O CRUD de restaurantes e sua validação são detalhados em
+[08-projeto.md](08-projeto.md).
 
 ### Colaboração: Cadastrar Usuário
 
@@ -109,9 +212,9 @@ sequenceDiagram
     participant R as RepositorioUsuarios
 
     Admin->>T: preenche dados e perfil
-    T->>C: cadastrarUsuario(dados)
-    C->>V: validar(dados)
-    V->>R: existeLogin / buscarPorEmail / existeMatricula
+    T->>C: cadastrar(dados)
+    C->>V: validar(dados, repositorio)
+    V->>R: existe_login / buscar_por_email / existe_matricula
     R-->>V: resultado
     alt dados inválidos
         V-->>C: lista de erros
@@ -138,11 +241,63 @@ sequenceDiagram
     participant R as RepositorioUsuarios
 
     Admin->>T: abre a listagem
-    T->>C: listarUsuarios()
-    C->>R: listarTodos()
+    T->>C: listar_todos()
+    C->>R: listar_todos()
     R-->>C: usuarios
     C-->>T: usuarios
     T-->>Admin: exibirUsuarios
+```
+
+### Colaboração: Consultar, editar e remover usuário
+
+```mermaid
+%%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
+sequenceDiagram
+    actor Admin as Administrador
+    participant T as TelaGerenciamentoUsuario
+    participant C as ControladorUsuario
+    participant V as ValidadorUsuario
+    participant R as RepositorioUsuarios
+
+    Admin->>T: consulta(usuarioId)
+    T->>C: buscar_por_id(usuarioId)
+    C->>R: buscar_por_id(usuarioId)
+    R-->>C: usuario ou None
+    alt usuário não encontrado
+        C-->>T: erro de não encontrado
+        T-->>Admin: exibe erro
+    else usuário encontrado
+        C-->>T: usuario
+        T-->>Admin: exibe dados sem senha/hash
+    end
+
+    Admin->>T: editar(usuarioId, dados)
+    T->>C: atualizar(usuarioId, dados)
+    C->>R: buscar_por_id(usuarioId)
+    R-->>C: usuario existente
+    C->>V: validar(dados, repositorio, id_ignorado=usuarioId)
+    V->>R: verifica unicidade excluindo o próprio usuário
+    R-->>V: resultado
+    alt dados inválidos
+        V-->>C: motivos de validação
+        C-->>T: recusa sem alterar o usuário
+    else dados válidos
+        C->>R: atualizar(usuario)
+        R-->>C: usuario atualizado
+        C-->>T: sucesso
+    end
+
+    Admin->>T: remover(usuarioId)
+    T->>C: remover(usuarioId)
+    C->>R: buscar_por_id(usuarioId)
+    R-->>C: usuario ou None
+    alt usuário não encontrado
+        C-->>T: erro de não encontrado
+    else usuário encontrado
+        C->>R: remover(usuarioId)
+        R-->>C: removido
+        C-->>T: resultado
+    end
 ```
 
 ---

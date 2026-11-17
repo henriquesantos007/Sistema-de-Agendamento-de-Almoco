@@ -1,25 +1,29 @@
 import copy
 import threading
-from datetime import time
+from datetime import datetime, time, timezone
 
 import pytest
 
 from source.aplicacao.fachada import FacadeSingletonController
+from source.aplicacao.relatorios import FormatoRelatorioInvalido
 from source.aplicacao.restaurantes import (
     DadosRestauranteInvalidos,
     RestauranteNaoEncontrado,
     RestauranteVinculado,
 )
 from source.aplicacao.usuarios import DadosUsuario, DadosUsuarioInvalidos
+from source.dominio.acessos import RegistroAcesso
 from source.dominio.restaurantes import DadosRestaurante
 from source.infraestrutura.persistencia.arquivo import (
     RepositorioRestaurantesArquivo,
     RepositorioUsuariosArquivo,
 )
 from source.infraestrutura.persistencia.memoria import (
+    RepositorioAcessosMemoria,
     RepositorioRestaurantesMemoria,
     RepositorioUsuariosMemoria,
 )
+from tests.apoio_relatorios import LoggerEmMemoria
 
 
 def dados_restaurante(nome="Restaurante do CI"):
@@ -67,7 +71,22 @@ def fachada_limpa():
 
 @pytest.fixture
 def repositorios():
-    return RepositorioUsuariosMemoria(), RepositorioRestaurantesMemoria()
+    return (
+        RepositorioUsuariosMemoria(),
+        RepositorioRestaurantesMemoria(),
+        RepositorioAcessosMemoria(),
+        LoggerEmMemoria(),
+    )
+
+
+def registrar_acessos(repositorio_acessos, *usuario_ids):
+    for minuto, usuario_id in enumerate(usuario_ids):
+        repositorio_acessos.registrar(
+            RegistroAcesso(
+                usuario_id=usuario_id,
+                instante=datetime(2026, 11, 10, 12, minuto, tzinfo=timezone.utc),
+            )
+        )
 
 
 @pytest.fixture
@@ -99,9 +118,15 @@ def test_primeira_chamada_sem_repositorios_deve_falhar():
         FacadeSingletonController.obter_instancia()
 
 
-def test_primeira_chamada_com_repositorio_faltando_deve_falhar(repositorios):
+@pytest.mark.parametrize("faltando", [0, 1, 2, 3])
+def test_primeira_chamada_com_dependencia_faltando_deve_falhar(
+    repositorios, faltando
+):
+    dependencias = list(repositorios)
+    dependencias[faltando] = None
+
     with pytest.raises(ValueError):
-        FacadeSingletonController.obter_instancia(repositorios[0], None)
+        FacadeSingletonController.obter_instancia(*dependencias)
 
     assert FacadeSingletonController._instancia is None
 
@@ -113,11 +138,28 @@ def test_repositorios_diferentes_depois_da_criacao_devem_ser_recusados(fachada):
         )
 
 
+def test_repositorio_de_acessos_diferente_depois_da_criacao_deve_ser_recusado(
+    fachada,
+):
+    with pytest.raises(ValueError):
+        FacadeSingletonController.obter_instancia(
+            repositorio_acessos=RepositorioAcessosMemoria()
+        )
+
+
+def test_logger_diferente_depois_da_criacao_deve_ser_recusado(fachada):
+    with pytest.raises(ValueError):
+        FacadeSingletonController.obter_instancia(logger=LoggerEmMemoria())
+
+
 def test_reiniciar_deve_permitir_nova_configuracao(fachada):
     FacadeSingletonController.reiniciar()
 
     nova = FacadeSingletonController.obter_instancia(
-        RepositorioUsuariosMemoria(), RepositorioRestaurantesMemoria()
+        RepositorioUsuariosMemoria(),
+        RepositorioRestaurantesMemoria(),
+        RepositorioAcessosMemoria(),
+        LoggerEmMemoria(),
     )
 
     assert nova is not fachada
@@ -249,6 +291,8 @@ def test_contagem_deve_refletir_dados_persistidos_em_arquivo(tmp_path):
         return FacadeSingletonController.obter_instancia(
             RepositorioUsuariosArquivo(tmp_path / "usuarios.bin"),
             RepositorioRestaurantesArquivo(tmp_path / "restaurantes.bin"),
+            RepositorioAcessosMemoria(),
+            LoggerEmMemoria(),
         )
 
     primeira = abrir()
@@ -263,4 +307,62 @@ def test_contagem_deve_refletir_dados_persistidos_em_arquivo(tmp_path):
     assert segunda.obter_contagem_por_entidade() == {
         FacadeSingletonController.CHAVE_USUARIOS: 1, 
         FacadeSingletonController.CHAVE_RESTAURANTES: 1
+    }
+
+
+# ---- Relatório de acessos ----
+
+def test_deve_gerar_relatorio_de_acessos_pelo_servico(fachada, repositorios):
+    ana = fachada.cadastrar_usuario(dados_estudante())
+    registrar_acessos(repositorios[2], ana.id, ana.id)
+
+    documento = fachada.gerar_relatorio_acessos("CSV")
+
+    assert documento.formato == "csv"
+    assert documento.conteudo.splitlines() == [
+        "total_acessos,usuarios_distintos",
+        "2,1",
+        "",
+        "usuario_id,login,perfil,quantidade",
+        f"{ana.id},anasilva,estudante,2",
+    ]
+
+
+def test_relatorio_deve_indicar_usuario_removido_pela_fachada(fachada, repositorios):
+    ana = fachada.cadastrar_usuario(dados_estudante())
+    registrar_acessos(repositorios[2], ana.id)
+    fachada.remover_usuario(ana.id)
+
+    documento = fachada.gerar_relatorio_acessos("csv")
+
+    assert documento.conteudo.splitlines()[-1] == (
+        f"{ana.id},usuário removido,usuário removido,1"
+    )
+
+
+def test_formato_de_relatorio_nao_suportado_deve_levantar_erro_de_validacao(
+    fachada,
+):
+    with pytest.raises(FormatoRelatorioInvalido):
+        fachada.gerar_relatorio_acessos("PDF")
+
+
+def test_geracao_do_relatorio_deve_ser_registrada_no_logger(fachada, repositorios):
+    fachada.gerar_relatorio_acessos("html")
+
+    assert [evento for evento, _, _ in repositorios[3].eventos] == [
+        "relatorio_acessos_gerado"
+    ]
+
+
+def test_registros_de_acesso_nao_devem_entrar_na_contagem_de_entidades(
+    fachada, repositorios
+):
+    ana = fachada.cadastrar_usuario(dados_estudante())
+    registrar_acessos(repositorios[2], ana.id, ana.id, ana.id)
+
+    assert fachada.contar_total_entidades() == 1
+    assert fachada.obter_contagem_por_entidade() == {
+        FacadeSingletonController.CHAVE_USUARIOS: 1,
+        FacadeSingletonController.CHAVE_RESTAURANTES: 0,
     }

@@ -3,6 +3,7 @@ import re
 from datetime import time
 
 from source.aplicacao.fachada import FacadeSingletonController
+from source.aplicacao.relatorios import FormatoRelatorioInvalido
 from source.aplicacao.restaurantes import (
     DadosRestauranteInvalidos,
     RestauranteVinculado,
@@ -10,11 +11,16 @@ from source.aplicacao.restaurantes import (
 from source.aplicacao.usuarios import DadosUsuario, DadosUsuarioInvalidos
 from source.dominio.excecoes import ErroPersistenciaBase
 from source.dominio.restaurantes import DadosRestaurante
-from source.infraestrutura.persistencia.fabrica_repositorio import (
-    ARMAZENAMENTOS,
-    criar_repositorio_restaurantes,
-    criar_repositorio_usuarios,
+from source.infraestrutura.logs import criar_adaptador_logging
+from source.infraestrutura.persistencia.fabrica_repositorios import (
+    FabricaRepositorios,
+    FabricaRepositoriosArquivo,
+    FabricaRepositoriosMemoria,
 )
+
+ARMAZENAMENTO_MEMORIA = "memoria"
+ARMAZENAMENTO_ARQUIVO = "arquivo"
+ARMAZENAMENTOS = (ARMAZENAMENTO_MEMORIA, ARMAZENAMENTO_ARQUIVO)
 
 
 def ler_argumentos() -> argparse.Namespace:
@@ -22,7 +28,7 @@ def ler_argumentos() -> argparse.Namespace:
     parser.add_argument(
         "--armazenamento",
         choices=ARMAZENAMENTOS,
-        default="memoria",
+        default=ARMAZENAMENTO_MEMORIA,
         help="Mecanismo de persistência (padrão: memoria)",
     )
     parser.add_argument(
@@ -35,8 +41,22 @@ def ler_argumentos() -> argparse.Namespace:
         default=None,
         help="Arquivo de restaurantes (padrão: dados/restaurantes.bin)",
     )
+    parser.add_argument(
+        "--caminho-acessos",
+        default=None,
+        help="Arquivo de registros de acesso (padrão: dados/acessos.jsonl)",
+    )
     return parser.parse_args()
 
+
+def escolher_fabrica(argumentos: argparse.Namespace) -> FabricaRepositorios:
+    if argumentos.armazenamento == ARMAZENAMENTO_ARQUIVO:
+        return FabricaRepositoriosArquivo(
+            caminho_usuarios=argumentos.caminho,
+            caminho_restaurantes=argumentos.caminho_restaurantes,
+            caminho_acessos=argumentos.caminho_acessos,
+        )
+    return FabricaRepositoriosMemoria()
 
 
 # Funções Auxiliares de Formatação
@@ -205,6 +225,16 @@ def tentar_remover_usuario(fachada: FacadeSingletonController, usuario_id: int, 
     print("-----------------------------------------\n")
 
 
+def tentar_gerar_relatorio_acessos(fachada: FacadeSingletonController, formato: str) -> None:
+    try:
+        documento = fachada.gerar_relatorio_acessos(formato)
+        print(f"Relatório de acessos em {documento.formato.upper()}:")
+        print(documento.conteudo)
+    except FormatoRelatorioInvalido as erro:
+        print(f"Relatório de acessos em '{formato}' recusado: {erro}")
+    except ErroPersistenciaBase as erro:
+        print(f"Falha de persistência ao gerar o relatório de acessos: {erro}")
+
 
 # CENÁRIO DE DEMONSTRAÇÃO
 
@@ -291,6 +321,11 @@ def exibir_relatorio_final(fachada: FacadeSingletonController) -> None:
     print(f"Usuários cadastrados: {fachada.contar_usuarios()}")
     print(f"Restaurantes cadastrados: {fachada.contar_restaurantes()}")
     print(f"Total de entidades cadastradas: {fachada.contar_total_entidades()}")
+
+    print("\n--- Relatório de Acessos ---")
+    tentar_gerar_relatorio_acessos(fachada, "csv")
+    tentar_gerar_relatorio_acessos(fachada, "html")
+    tentar_gerar_relatorio_acessos(fachada, "pdf")
 
 
 
@@ -400,12 +435,14 @@ def menu_principal(fachada: FacadeSingletonController) -> None:
 def main():
     argumentos = ler_argumentos()
 
+    fabrica = escolher_fabrica(argumentos)
+
     try:
         fachada = FacadeSingletonController.obter_instancia(
-            criar_repositorio_usuarios(argumentos.armazenamento, argumentos.caminho),
-            criar_repositorio_restaurantes(
-                argumentos.armazenamento, argumentos.caminho_restaurantes
-            ),
+            fabrica.criar_repositorio_usuarios(),
+            fabrica.criar_repositorio_restaurantes(),
+            fabrica.criar_repositorio_acessos(),
+            criar_adaptador_logging(),
         )
     except ErroPersistenciaBase as erro:
         print(f"Não foi possível iniciar o armazenamento: {erro}")
