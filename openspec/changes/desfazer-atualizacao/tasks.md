@@ -10,5 +10,5 @@
   mais recente (`test(usuarios)`).
 - [x] Registrar os padrões Command e Memento na ADR e na documentação do
   projeto (`docs(arquitetura)`).
-- [ ] Documentar o UC23 — Desfazer atualização de usuário em
-  `docs/04-casos-de-uso/detalhados.md` (`docs(casos-de-uso)`).
+- [x] Incluir UC23 no catálogo e na matriz de rastreabilidade de casos de uso
+  (`docs(casos-de-uso)`).
