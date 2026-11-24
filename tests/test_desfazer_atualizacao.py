@@ -1,5 +1,4 @@
 import pytest
-from datetime import datetime
 
 from source.aplicacao.fachada.facade_singleton_controller import FacadeSingletonController
 from source.aplicacao.usuarios.dados_usuario import DadosUsuario
@@ -12,15 +11,15 @@ from source.infraestrutura.logs import criar_adaptador_logging
 @pytest.fixture
 def fachada_configurada():
     """Configura uma instância limpa da Fachada em memória para cada teste."""
-    # Resetando a instância do Singleton para garantir isolamento dos testes
-    FacadeSingletonController._instancia = None
-    
-    return FacadeSingletonController.obter_instancia(
+    FacadeSingletonController.reiniciar()
+    fachada = FacadeSingletonController.obter_instancia(
         RepositorioUsuariosMemoria(),
         RepositorioRestaurantesMemoria(),
         RepositorioAcessosMemoria(),
         criar_adaptador_logging()
     )
+    yield fachada
+    FacadeSingletonController.reiniciar()
 
 
 def test_deve_desfazer_ultima_atualizacao_restaurando_estado_original(fachada_configurada):
@@ -151,3 +150,32 @@ def test_atualizacao_invalida_nao_descarta_historico_da_ultima_atualizacao_valid
     assert fachada.buscar_usuario(usuario.id).nome == "Ana Modificada"
     assert fachada.desfazer_ultima_atualizacao_usuario() is True
     assert fachada.buscar_usuario(usuario.id).nome == "Ana Original"
+
+
+def test_remover_usuario_invalida_o_desfazimento_desse_usuario(
+    fachada_configurada,
+):
+    fachada = fachada_configurada
+    usuario = fachada.cadastrar_usuario(DadosUsuario(
+        perfil="estudante",
+        nome="Ana Original",
+        login="anasilva",
+        email="ana@example.com",
+        senha="Senha@123",
+        telefone="83999999999",
+        matricula="2026001",
+    ))
+    dados_atualizados = DadosUsuario(
+        perfil="estudante",
+        nome="Ana Modificada",
+        login="anasilva",
+        email="ana.mod@example.com",
+        senha="Senha@123",
+        telefone="83900000000",
+        matricula="2026001",
+    )
+
+    fachada.atualizar_usuario(usuario.id, dados_atualizados)
+    fachada.remover_usuario(usuario.id)
+
+    assert fachada.desfazer_ultima_atualizacao_usuario() is False

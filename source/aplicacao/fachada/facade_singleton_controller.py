@@ -207,6 +207,11 @@ class FacadeSingletonController:
 
     def remover_usuario(self, usuario_id: int) -> None:
         self._controlador_usuario.remover(usuario_id)
+        if (
+            isinstance(self._ultimo_comando_desfazivel, ComandoAtualizarUsuario)
+            and self._ultimo_comando_desfazivel.usuario_id == usuario_id
+        ):
+            self._ultimo_comando_desfazivel = None
 
     def cadastrar_restaurante(self, dados: DadosRestaurante) -> Restaurante:
         return self._controlador_restaurante.cadastrar(dados)

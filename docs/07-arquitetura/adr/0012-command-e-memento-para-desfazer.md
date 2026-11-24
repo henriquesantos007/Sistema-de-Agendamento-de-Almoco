@@ -1,4 +1,4 @@
-# ADR-0012: Reverter a última atualização de usuário com Command e Memento
+# ADR-0012: Fachada baseada em Command para desfazer a atualização de usuário com Memento
 
 - Status: Aceito
 - Data: 2026-11-17
@@ -20,6 +20,9 @@ Implementar a reversão combinando os padrões comportamentais **Command** e **M
 - A entidade `Usuario` preserva seu encapsulamento, sendo a única que sabe como seu estado é extraído e injetado.
 - O `ControladorUsuario` continua responsável apenas pelas regras de negócio e validações, respeitando o Princípio da Responsabilidade Única (SRP).
 - O histórico contém somente a atualização de usuário concluída com sucesso mais recente e só pode ser consumido uma vez. Um histórico maior ou ações de outros tipos não fazem parte desta decisão.
+- Somente `atualizar_usuario` usa Command nesta fachada; os demais casos de uso continuam delegando diretamente aos controladores.
+- Se o usuário associado à atualização disponível é removido, a fachada descarta esse comando para evitar tentar restaurar uma entidade inexistente.
+- O histórico em memória não é protegido por nova sincronização além da configuração existente da instância Singleton.
 - Introduz uma leve camada extra de abstração na aplicação, visto que o fluxo agora passa pela criação e execução de um objeto de comando antes de chegar ao controlador.
 
 ## Alternativas consideradas
@@ -29,4 +32,4 @@ Implementar a reversão combinando os padrões comportamentais **Command** e **M
 
 ## Relação com decisões anteriores
 
-Esta decisão estende diretamente a **ADR-0008**, uma vez que a `FacadeSingletonController` absorve as novas responsabilidades de instanciar os comandos e atuar como o zelador do histórico de ações do sistema. Além disso, a reversão aciona a re-gravação no mecanismo de persistência definido pela **ADR-0009**, garantindo que as fábricas de arquivos binários e memória operem o *rollback* transparente dos dados revertidos.
+Esta decisão estende diretamente a **ADR-0008**, uma vez que a `FacadeSingletonController` absorve as novas responsabilidades de instanciar os comandos e atuar como o zelador do histórico de ações do sistema. Além disso, o comando restaurado é gravado pelo repositório selecionado pela **ADR-0009**, que pode persistir em memória ou em arquivo.

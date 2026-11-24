@@ -117,23 +117,24 @@ Requisito relacionado: RF18, especificado em [usuários](../../openspec/specs/us
 
 | Campo | Descrição |
 |---|---|
-| Ator principal | Administrador |
+| Ator principal | Administrador autenticado |
 | Objetivo | Desfazer a atualização de usuário concluída com sucesso mais recentemente durante a execução atual. |
-| Precondições | O Administrador solicita desfazer uma atualização. |
+| Precondições | O Administrador está autenticado e solicita desfazer uma atualização. |
 | Pós-condições | O estado imediatamente anterior à atualização é restaurado e persistido. O identificador, o perfil e os dados específicos do perfil são preservados. A única atualização disponível para desfazer é consumida. |
 
 ### Fluxo principal
 
 1. O Administrador solicita o desfazimento da última atualização de usuário.
-2. A fachada obtém o último comando disponível para desfazer.
-3. O comando restaura o memento com o estado anterior do usuário.
-4. O estado restaurado é gravado no repositório.
-5. A fachada limpa o histórico de desfazimento.
+2. O sistema obtém a atualização concluída com sucesso mais recentemente.
+3. O sistema restaura o estado anterior desse usuário.
+4. O estado restaurado é persistido pelo repositório.
+5. O sistema descarta a ação disponível para desfazer.
 6. O sistema confirma o sucesso da operação.
 
 ### Fluxos alternativos e adicionais
 
 - **2a. Não existe atualização disponível:** o sistema informa que não há atualização armazenada para desfazer e não altera usuários.
+- **Remoção do usuário atualizado:** o sistema descarta o desfazimento desse usuário; uma solicitação posterior não o restaura.
 - **Desfazer após duas atualizações:** se duas atualizações forem concluídas, o desfazimento restaura apenas o estado imediatamente anterior à segunda atualização.
 - **Atualização inválida após uma atualização válida:** a atualização inválida não é concluída e o histórico válido continua disponível para desfazer.
 - **Nova solicitação após o desfazimento:** como o histórico foi consumido, uma nova solicitação não desfaz nenhuma atualização.

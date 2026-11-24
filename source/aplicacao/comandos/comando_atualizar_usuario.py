@@ -27,6 +27,7 @@ class ComandoAtualizarUsuario(Comando):
         self._dados_novos = dados_novos
         self._memento: Optional[UsuarioMemento] = None
         self._usuario_alvo: Optional[Usuario] = None
+        self.usuario_id = id_usuario
 
     def executar(self) -> Usuario:
         # Busca a entidade atual antes de aplicar as alterações

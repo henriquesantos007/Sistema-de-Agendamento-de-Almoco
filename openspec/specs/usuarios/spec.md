@@ -1,7 +1,7 @@
 # usuarios Specification
 
 ## Purpose
-Gerenciamento dos usuários do sistema (Administrador, Estudante e Gestor de Restaurante): cadastro com validação de login e senha, impedimento de dados duplicados, listagem e escolha do mecanismo de armazenamento.
+Gerenciamento dos usuários do sistema (Administrador, Estudante e Gestor de Restaurante): cadastro com validação de login e senha, impedimento de dados duplicados, atualização, listagem, remoção, desfazimento da última atualização e escolha do mecanismo de armazenamento.
 
 As mensagens entre aspas são exatamente as exibidas pelo sistema. Quando um cadastro é recusado por mais de um motivo, todas as mensagens são exibidas juntas (ver NF-USA-01).
 
@@ -264,3 +264,15 @@ O sistema DEVE permitir ao Administrador desfazer a atualização de usuário co
 - **WHEN** o Administrador solicita o desfazimento
 - **THEN** o sistema restaura e persiste o estado do usuário imediatamente anterior à segunda atualização
 - **AND** uma nova solicitação de desfazimento não altera o usuário
+
+#### Scenario: Atualização inválida não descarta o histórico válido
+- **GIVEN** o usuário de id 1 teve uma atualização concluída com sucesso e uma atualização posterior é recusada por dados inválidos
+- **WHEN** o Administrador solicita o desfazimento
+- **THEN** o sistema restaura e persiste o estado anterior à última atualização válida
+- **AND** mantém disponível somente essa ação até que ela seja utilizada
+
+#### Scenario: Remoção invalida o desfazimento da atualização do mesmo usuário
+- **GIVEN** o usuário de id 1 teve uma atualização concluída com sucesso
+- **WHEN** o Administrador remove o usuário de id 1
+- **THEN** o sistema descarta o comando disponível para desfazer essa atualização
+- **AND** uma solicitação de desfazimento não altera nenhum usuário
