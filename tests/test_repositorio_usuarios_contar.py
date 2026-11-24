@@ -1,17 +1,19 @@
 import pytest
 
-from source.dominio.usuarios.usuario import Administrador
+from source.dominio.usuarios.usuario import Administrador, DadosBasicosUsuario
 from source.infraestrutura.persistencia.arquivo import RepositorioUsuariosArquivo
 from source.infraestrutura.persistencia.memoria import RepositorioUsuariosMemoria
 
 
 def novo_admin(indice):
     return Administrador(
-        nome=f"Admin {indice}",
-        login=f"admin{indice}",
-        email=f"admin{indice}@example.com",
-        senha="hash",
-        telefone=f"8399999000{indice}",
+        DadosBasicosUsuario(
+            nome=f"Admin {indice}",
+            login=f"admin{indice}",
+            email=f"admin{indice}@example.com",
+            senha="hash",
+            telefone=f"8399999000{indice}",
+        ),
     )
 
 

@@ -2,20 +2,18 @@ from typing import List, Optional
 
 from source.aplicacao.usuarios.dados_usuario import DadosUsuario
 from source.aplicacao.usuarios.excecoes import DadosUsuarioInvalidos
-from source.aplicacao.usuarios.validador_usuario import normalizar_telefone
+from source.aplicacao.usuarios.fabrica_usuario import FabricaUsuario
+from source.dominio.usuarios.perfil import Perfil
 from source.dominio.usuarios.senha import gerar_hash_senha
-from source.dominio.usuarios.usuario import (
-    Administrador,
-    Estudante,
-    GestorRestaurante,
-    Usuario,
-)
+from source.dominio.usuarios.telefone import normalizar_telefone
+from source.dominio.usuarios.usuario import DadosBasicosUsuario, Usuario
 
 
 class ControladorUsuario:
-    def __init__(self, repositorio, validador_usuario):
+    def __init__(self, repositorio, validador_usuario, fabrica=None):
         self.repositorio = repositorio
         self.validador_usuario = validador_usuario
+        self.fabrica = fabrica or FabricaUsuario()
 
     def cadastrar(self, dados):
         erros = self.validador_usuario.validar(dados, self.repositorio)
@@ -28,42 +26,18 @@ class ControladorUsuario:
         return usuario
 
     def _criar_usuario(self, dados: DadosUsuario) -> Usuario:
-        perfil = (dados.perfil or "").strip().lower()
+        perfil = Perfil.de_texto(dados.perfil)
+        if perfil is None:
+            raise ValueError("perfil invalido")
 
-        login = (dados.login or "").strip()
-        senha_hash = gerar_hash_senha(dados.senha)
-        telefone_normalizado = normalizar_telefone(dados.telefone)
-
-        if perfil == "estudante":
-            return Estudante(
-                nome=dados.nome,
-                login=login,
-                email=dados.email,
-                senha=senha_hash,
-                telefone=telefone_normalizado,
-                matricula=dados.matricula or "",
-            )
-
-        if perfil == "gestor_restaurante":
-            return GestorRestaurante(
-                nome=dados.nome,
-                login=login,
-                email=dados.email,
-                senha=senha_hash,
-                telefone=telefone_normalizado,
-                restaurante_id=dados.restaurante_id,
-            )
-
-        if perfil == "administrador":
-            return Administrador(
-                nome=dados.nome,
-                login=login,
-                email=dados.email,
-                senha=senha_hash,
-                telefone=telefone_normalizado,
-            )
-
-        raise ValueError("perfil invalido")
+        basicos = DadosBasicosUsuario(
+            nome=dados.nome,
+            login=(dados.login or "").strip(),
+            email=dados.email,
+            senha=gerar_hash_senha(dados.senha),
+            telefone=normalizar_telefone(dados.telefone),
+        )
+        return self.fabrica.criar(perfil, basicos, dados)
 
     def listar_todos(self):
         return self.repositorio.listar_todos()

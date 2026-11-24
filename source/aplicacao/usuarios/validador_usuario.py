@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from source.dominio.usuarios.excecoes import LoginInvalido, SenhaInvalida
+from source.dominio.usuarios.perfil import Perfil
 from source.dominio.usuarios.politica_credenciais import (
     validar_login,
     validar_senha,
@@ -10,10 +11,7 @@ from source.dominio.usuarios.politica_credenciais import (
 from source.dominio.restaurantes.repositorio_restaurantes import (
     RepositorioRestaurantes,
 )
-
-
-def normalizar_telefone(telefone: str) -> str:
-    return re.sub(r"\D", "", telefone)
+from source.dominio.usuarios.telefone import normalizar_telefone
 
 class ValidadorUsuarioBase(ABC):
     @abstractmethod
@@ -59,10 +57,7 @@ class ValidadorPerfil(ValidadorUsuarioBase):
     def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
-        perfil = (dados.perfil or "").strip().lower()
-        perfis_validos = {"estudante", "gestor_restaurante", "administrador"}
-
-        if perfil not in perfis_validos:
+        if Perfil.de_texto(dados.perfil) is None:
             erros.append("perfil invalido")
 
         return erros
@@ -71,8 +66,7 @@ class ValidadorEstudante(ValidadorUsuarioBase):
     def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
-        perfil = (dados.perfil or "").strip().lower()
-        if perfil != "estudante":
+        if Perfil.de_texto(dados.perfil) is not Perfil.ESTUDANTE:
             return erros
 
         if not dados.matricula or not dados.matricula.strip():
@@ -80,7 +74,7 @@ class ValidadorEstudante(ValidadorUsuarioBase):
         elif repositorio.existe_matricula(dados.matricula, id_ignorado):
             erros.append("matricula ja cadastrada")
 
-        telefone = re.sub(r"\D", "", dados.telefone or "")
+        telefone = normalizar_telefone(dados.telefone or "")
         if telefone and repositorio.existe_telefone(telefone, id_ignorado):
             erros.append("telefone ja cadastrado para estudante")
 
@@ -93,7 +87,7 @@ class ValidadorGestorRestaurante(ValidadorUsuarioBase):
     def validar(self, dados, repositorio, id_ignorado: int = None) -> List[str]:
         erros = []
 
-        if (dados.perfil or "").strip().lower() != "gestor_restaurante":
+        if Perfil.de_texto(dados.perfil) is not Perfil.GESTOR_RESTAURANTE:
             return erros
 
         if dados.restaurante_id is None:

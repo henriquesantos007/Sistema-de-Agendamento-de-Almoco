@@ -5,7 +5,12 @@ from typing import List, Optional, Tuple
 
 from source.aplicacao.logger_aplicacao import LoggerAplicacao, NivelEvento
 from source.dominio.acessos import RegistroAcesso
-from source.dominio.usuarios import Administrador, Estudante, Usuario
+from source.dominio.usuarios import (
+    Administrador,
+    DadosBasicosUsuario,
+    Estudante,
+    Usuario,
+)
 from source.infraestrutura.persistencia.memoria import RepositorioAcessosMemoria
 
 
@@ -36,24 +41,28 @@ class LoggerEmMemoria(LoggerAplicacao):
 
 def estudante(id: int, login: str) -> Estudante:
     return Estudante(
-        nome=f"Nome de {login}",
-        login=login,
-        email=f"{login}@example.com",
-        senha="Senha@2026",
-        telefone=f"8399999{id:04d}",
+        DadosBasicosUsuario(
+            nome=f"Nome de {login}",
+            login=login,
+            email=f"{login}@example.com",
+            senha="Senha@2026",
+            telefone=f"8399999{id:04d}",
+            id=id,
+        ),
         matricula=f"2026{id:03d}",
-        id=id,
     )
 
 
 def administrador(id: int, login: str) -> Administrador:
     return Administrador(
-        nome=f"Nome de {login}",
-        login=login,
-        email=f"{login}@example.com",
-        senha="Senha@2026",
-        telefone=f"8388888{id:04d}",
-        id=id,
+        DadosBasicosUsuario(
+            nome=f"Nome de {login}",
+            login=login,
+            email=f"{login}@example.com",
+            senha="Senha@2026",
+            telefone=f"8388888{id:04d}",
+            id=id,
+        ),
     )
 
 
