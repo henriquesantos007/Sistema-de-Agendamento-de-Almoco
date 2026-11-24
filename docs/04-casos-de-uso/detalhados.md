@@ -119,7 +119,7 @@ Requisito relacionado: RF18, especificado em [usuários](../../openspec/specs/us
 |---|---|
 | Ator principal | Administrador |
 | Objetivo | Desfazer a atualização de usuário concluída com sucesso mais recentemente durante a execução atual. |
-| Precondições | Existe pelo menos uma atualização concluída disponível para desfazer. |
+| Precondições | O Administrador solicita desfazer uma atualização. |
 | Pós-condições | O estado imediatamente anterior à atualização é restaurado e persistido. O identificador, o perfil e os dados específicos do perfil são preservados. A única atualização disponível para desfazer é consumida. |
 
 ### Fluxo principal
