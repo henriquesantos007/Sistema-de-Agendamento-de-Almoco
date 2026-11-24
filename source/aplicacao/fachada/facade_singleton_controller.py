@@ -115,34 +115,20 @@ class FacadeSingletonController:
         repositorio_acessos: Optional[RepositorioAcessos],
         logger: Optional[LoggerAplicacao],
     ) -> "FacadeSingletonController":
-        dependencias = (
+        cls._exigir_dependencias(
             repositorio_usuarios,
             repositorio_restaurantes,
             repositorio_acessos,
             logger,
         )
-        if any(dependencia is None for dependencia in dependencias):
-            raise ValueError(
-                "A primeira chamada de obter_instancia exige os repositórios "
-                "de usuários, de restaurantes e de acessos e o logger."
-            )
 
         instancia = object.__new__(cls)
         instancia._repositorio_usuarios = repositorio_usuarios
         instancia._repositorio_restaurantes = repositorio_restaurantes
         instancia._repositorio_acessos = repositorio_acessos
         instancia._logger = logger
-        instancia._controlador_usuario = ControladorUsuario(
-            repositorio_usuarios,
-            ValidadorUsuario([
-                ValidadorDadosObrigatorios(),
-                ValidadorPerfil(),
-                ValidadorLogin(),
-                ValidadorEmail(),
-                ValidadorSenha(),
-                ValidadorEstudante(),
-                ValidadorGestorRestaurante(repositorio_restaurantes),
-            ]),
+        instancia._controlador_usuario = cls._montar_controlador_usuario(
+            repositorio_usuarios, repositorio_restaurantes
         )
         instancia._controlador_restaurante = ControladorRestaurante(
             repositorio_restaurantes,
@@ -155,6 +141,32 @@ class FacadeSingletonController:
             logger,
         )
         return instancia
+
+    @staticmethod
+    def _exigir_dependencias(*dependencias: object) -> None:
+        if any(dependencia is None for dependencia in dependencias):
+            raise ValueError(
+                "A primeira chamada de obter_instancia exige os repositórios "
+                "de usuários, de restaurantes e de acessos e o logger."
+            )
+
+    @staticmethod
+    def _montar_controlador_usuario(
+        repositorio_usuarios: RepositorioUsuarios,
+        repositorio_restaurantes: RepositorioRestaurantes,
+    ) -> ControladorUsuario:
+        return ControladorUsuario(
+            repositorio_usuarios,
+            ValidadorUsuario([
+                ValidadorDadosObrigatorios(),
+                ValidadorPerfil(),
+                ValidadorLogin(),
+                ValidadorEmail(),
+                ValidadorSenha(),
+                ValidadorEstudante(),
+                ValidadorGestorRestaurante(repositorio_restaurantes),
+            ]),
+        )
 
     def cadastrar_usuario(self, dados: DadosUsuario) -> Usuario:
         return self._controlador_usuario.cadastrar(dados)

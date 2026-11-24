@@ -1,5 +1,5 @@
 import string
-from typing import Optional
+from typing import List, Optional
 
 from source.dominio.usuarios.excecoes import LoginInvalido, SenhaInvalida
 
@@ -48,8 +48,17 @@ def validar_senha(
     Levanta SenhaInvalida com todos os motivos encontrados.
     """
     senha = senha or ""
-    motivos = []
+    motivos = (
+        _motivos_de_tamanho(senha)
+        + _motivos_de_complexidade(senha)
+        + _motivos_de_igualdade(senha, login, email)
+    )
+    if motivos:
+        raise SenhaInvalida(motivos)
 
+
+def _motivos_de_tamanho(senha: str) -> List[str]:
+    motivos = []
     if len(senha) < SENHA_TAMANHO_MINIMO:
         motivos.append(
             f"senha deve ter no minimo {SENHA_TAMANHO_MINIMO} caracteres"
@@ -58,7 +67,10 @@ def validar_senha(
         motivos.append(
             f"senha deve ter no maximo {SENHA_TAMANHO_MAXIMO} caracteres"
         )
+    return motivos
 
+
+def _motivos_de_complexidade(senha: str) -> List[str]:
     tipos_presentes = sum(
         (
             any(c in string.ascii_uppercase for c in senha),
@@ -67,13 +79,19 @@ def validar_senha(
             any(c in CARACTERES_ESPECIAIS for c in senha),
         )
     )
-    if tipos_presentes < SENHA_TIPOS_MINIMOS:
-        motivos.append(
-            f"senha deve conter ao menos {SENHA_TIPOS_MINIMOS} dos 4 tipos de "
-            "caracteres: maiusculas, minusculas, numeros e especiais "
-            f"({' '.join(CARACTERES_ESPECIAIS)})"
-        )
+    if tipos_presentes >= SENHA_TIPOS_MINIMOS:
+        return []
+    return [
+        f"senha deve conter ao menos {SENHA_TIPOS_MINIMOS} dos 4 tipos de "
+        "caracteres: maiusculas, minusculas, numeros e especiais "
+        f"({' '.join(CARACTERES_ESPECIAIS)})"
+    ]
 
+
+def _motivos_de_igualdade(
+    senha: str, login: Optional[str], email: Optional[str]
+) -> List[str]:
+    motivos = []
     login_normalizado = (login or "").strip()
     if login_normalizado and senha == login_normalizado:
         motivos.append("senha nao pode ser identica ao login")
@@ -81,6 +99,4 @@ def validar_senha(
     email_normalizado = (email or "").strip()
     if email_normalizado and senha == email_normalizado:
         motivos.append("senha nao pode ser identica ao e-mail")
-
-    if motivos:
-        raise SenhaInvalida(motivos)
+    return motivos
