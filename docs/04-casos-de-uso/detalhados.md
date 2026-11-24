@@ -7,15 +7,17 @@ nova entidade e a regra de remoção condicionada ao vínculo com gestores.
 
 Como documentação complementar, este arquivo também detalha
 **UC08 — Editar Usuário**, **UC20 — Consultar Usuário** e
-**UC21 — Remover Usuário**, operações implementadas no CRUD de usuários. Os atores,
+**UC21 — Remover Usuário**, operações implementadas no CRUD de usuários, e
+**UC23 — Desfazer Atualização de Usuário**, da Sprint 5. Os atores,
 precondições e fluxos seguem as
 regras de [usuários](../../openspec/specs/usuarios/spec.md) e
 [restaurantes](../../openspec/specs/restaurantes/spec.md), e os RNFs de
 [segurança](../../openspec/specs/rnf/seguranca/spec.md),
 [usabilidade](../../openspec/specs/rnf/usabilidade/spec.md) e
 [confiabilidade](../../openspec/specs/rnf/confiabilidade/spec.md). As telas
-descritas são conceituais. A CLI de `main.py` demonstra cadastro, atualização
-e remoção de usuários, cadastro e remoção de restaurantes e o relatório final;
+descritas são conceituais. A CLI de `main.py` demonstra cadastro, atualização,
+desfazimento e remoção de usuários, cadastro e remoção de restaurantes e o
+relatório final;
 a consulta individual e a atualização de restaurantes são operações da
 fachada, mas não são exercitadas pelo cenário da CLI.
 
@@ -109,6 +111,35 @@ fachada, mas não são exercitadas pelo cenário da CLI.
 
 - **2a. Usuário inexistente:** o sistema informa "Usuário com ID '<id>' não encontrado." e não altera o repositório.
 - **3a. Falha de persistência:** o sistema informa a falha e preserva o arquivo e o estado em memória anteriores à operação.
+
+## UC23 — Desfazer Atualização de Usuário
+
+Requisito relacionado: RF18, especificado em [usuários](../../openspec/specs/usuarios/spec.md).
+
+| Campo | Descrição |
+|---|---|
+| Ator principal | Administrador |
+| Objetivo | Desfazer a atualização de usuário concluída com sucesso mais recentemente durante a execução atual. |
+| Precondições | O Administrador solicita o desfazimento durante a execução atual do sistema. |
+| Pós-condições | O estado imediatamente anterior à atualização é restaurado e persistido. O identificador, o perfil e os dados específicos do perfil são preservados. A única atualização disponível para desfazer é consumida. |
+
+### Fluxo principal
+
+1. O Administrador solicita o desfazimento da última atualização de usuário.
+2. O sistema obtém a atualização concluída com sucesso mais recentemente.
+3. O sistema restaura o estado anterior desse usuário.
+4. O estado restaurado é persistido pelo repositório.
+5. O sistema descarta a ação disponível para desfazer.
+6. O sistema confirma o sucesso da operação.
+
+### Fluxos alternativos e adicionais
+
+- **2a. Não existe atualização disponível:** o sistema informa "Aviso: Não há atualização disponível para desfazer." e não altera usuários.
+- **4a. Falha ao persistir a restauração:** o sistema informa a falha, mantém o estado atualizado e mantém a ação disponível para nova tentativa.
+- **Remoção do usuário atualizado:** o sistema descarta o desfazimento desse usuário; uma solicitação posterior não o restaura.
+- **Desfazer após duas atualizações:** se duas atualizações forem concluídas, o desfazimento restaura apenas o estado imediatamente anterior à segunda atualização.
+- **Atualização inválida após uma atualização válida:** a atualização inválida não é concluída e o histórico válido continua disponível para desfazer.
+- **Nova solicitação após o desfazimento:** como o histórico foi consumido, uma nova solicitação não desfaz nenhuma atualização.
 
 ## UC12 — Cadastrar Restaurante
 
