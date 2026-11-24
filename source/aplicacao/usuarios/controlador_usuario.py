@@ -68,7 +68,7 @@ class ControladorUsuario:
         usuario_existente.email = dados_atualizados.email
         usuario_existente.senha = dados_atualizados.senha
         usuario_existente.login = dados_atualizados.login
-        usuario_existente.telefone = dados_atualizados.telefone
+        usuario_existente.telefone = normalizar_telefone(dados_atualizados.telefone)
         
         return self.repositorio.atualizar(usuario_existente)
 

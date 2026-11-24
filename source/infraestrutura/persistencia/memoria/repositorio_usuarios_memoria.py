@@ -48,6 +48,9 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
 
     def existe_telefone(self, telefone: str, id_ignorado: Optional[int] = None) -> bool:
         telefone_normalizado = normalizar_telefone(telefone)
+        # Sem digitos, nao ha telefone a comparar (comportamento do validador).
+        if not telefone_normalizado:
+            return False
         return any(
             isinstance(usuario, Estudante)
             and normalizar_telefone(usuario.telefone) == telefone_normalizado

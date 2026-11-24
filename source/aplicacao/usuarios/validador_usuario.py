@@ -11,7 +11,6 @@ from source.dominio.usuarios.politica_credenciais import (
 from source.dominio.restaurantes.repositorio_restaurantes import (
     RepositorioRestaurantes,
 )
-from source.dominio.usuarios.telefone import normalizar_telefone
 
 class ValidadorUsuarioBase(ABC):
     @abstractmethod
@@ -74,8 +73,9 @@ class ValidadorEstudante(ValidadorUsuarioBase):
         elif repositorio.existe_matricula(dados.matricula, id_ignorado):
             erros.append("matricula ja cadastrada")
 
-        telefone = normalizar_telefone(dados.telefone or "")
-        if telefone and repositorio.existe_telefone(telefone, id_ignorado):
+        # A comparacao e feita no repositorio, que normaliza o valor buscado e
+        # os telefones ja persistidos (inclusive registros antigos formatados).
+        if dados.telefone and repositorio.existe_telefone(dados.telefone, id_ignorado):
             erros.append("telefone ja cadastrado para estudante")
 
         return erros
