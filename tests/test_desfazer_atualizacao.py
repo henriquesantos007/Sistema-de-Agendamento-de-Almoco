@@ -2,6 +2,8 @@ import pytest
 
 from source.aplicacao.fachada.facade_singleton_controller import FacadeSingletonController
 from source.aplicacao.usuarios.dados_usuario import DadosUsuario
+from source.dominio.usuarios.senha import verificar_senha
+from source.infraestrutura.persistencia.arquivo import RepositorioUsuariosArquivo
 from source.infraestrutura.persistencia.memoria.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
 from source.infraestrutura.persistencia.memoria.repositorio_restaurantes_memoria import RepositorioRestaurantesMemoria
 from source.infraestrutura.persistencia.memoria.repositorio_acessos_memoria import RepositorioAcessosMemoria
@@ -19,6 +21,20 @@ def fachada_configurada():
         criar_adaptador_logging()
     )
     yield fachada
+    FacadeSingletonController.reiniciar()
+
+
+@pytest.fixture
+def fachada_com_arquivo(tmp_path):
+    FacadeSingletonController.reiniciar()
+    caminho = tmp_path / "usuarios.bin"
+    fachada = FacadeSingletonController.obter_instancia(
+        RepositorioUsuariosArquivo(caminho),
+        RepositorioRestaurantesMemoria(),
+        RepositorioAcessosMemoria(),
+        criar_adaptador_logging(),
+    )
+    yield fachada, caminho
     FacadeSingletonController.reiniciar()
 
 
@@ -70,6 +86,46 @@ def test_deve_desfazer_ultima_atualizacao_restaurando_estado_original(fachada_co
     assert usr_revertido.nome == "Ana Original"
     assert usr_revertido.email == "ana@example.com"
     assert usr_revertido.telefone == "83999999999"
+    assert usr_revertido.id == id_usuario
+    assert usr_revertido.perfil == "estudante"
+    assert usr_revertido.matricula == "2026001"
+    assert verificar_senha("Senha@123", usr_revertido.senha)
+
+
+def test_deve_persistir_desfazimento_em_repositorio_de_arquivo(
+    fachada_com_arquivo,
+):
+    fachada, caminho = fachada_com_arquivo
+    usuario = fachada.cadastrar_usuario(DadosUsuario(
+        perfil="estudante",
+        nome="Ana Original",
+        login="anasilva",
+        email="ana@example.com",
+        senha="Senha@123",
+        telefone="83999999999",
+        matricula="2026001",
+    ))
+    fachada.atualizar_usuario(usuario.id, DadosUsuario(
+        perfil="estudante",
+        nome="Ana Modificada",
+        login="anasilva",
+        email="ana.mod@example.com",
+        senha="NovaSenha@123",
+        telefone="(83) 90000-0000",
+        matricula="2026001",
+    ))
+
+    assert fachada.desfazer_ultima_atualizacao_usuario() is True
+
+    usuario_reaberto = RepositorioUsuariosArquivo(caminho).buscar_por_id(
+        usuario.id
+    )
+    assert usuario_reaberto.nome == "Ana Original"
+    assert usuario_reaberto.email == "ana@example.com"
+    assert usuario_reaberto.id == usuario.id
+    assert usuario_reaberto.perfil == "estudante"
+    assert usuario_reaberto.matricula == "2026001"
+    assert verificar_senha("Senha@123", usuario_reaberto.senha)
 
 
 def test_nao_deve_desfazer_se_o_historico_estiver_vazio(fachada_configurada):
