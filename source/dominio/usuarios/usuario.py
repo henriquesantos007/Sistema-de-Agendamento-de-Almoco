@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from typing import Optional
+from source.dominio.usuarios.memento import UsuarioMemento
 
 
 class StatusUsuario(Enum):
@@ -35,6 +36,16 @@ class Usuario(ABC):
     @abstractmethod
     def perfil(self) -> str:
         raise NotImplementedError
+
+    def criar_memento(self) -> UsuarioMemento:
+        """Cria um memento contendo o snapshot de seu estado atual."""
+        # Captura todos os atributos atuais do objeto dinamicamente
+        return UsuarioMemento(self.__dict__)
+
+    def restaurar_memento(self, memento: UsuarioMemento) -> None:
+        """Usa o Memento para restaurar seu estado interno original."""
+        estado_restaurado = memento.get_estado()
+        self.__dict__.update(estado_restaurado)
 
 
 class Estudante(Usuario):

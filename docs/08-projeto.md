@@ -666,6 +666,44 @@ classDiagram
     ErroValidacaoCampo <|-- LoginInvalido
     ErroValidacaoCampo <|-- SenhaInvalida
 
+    class FacadeSingletonController {
+        <<facade>>
+        -_ultimo_comando_desfazivel: Optional~Comando~
+        +desfazer_ultima_atualizacao_usuario(): boolean
+    }
+
+    class Comando {
+        <<interface abstrata>>
+        +executar() Usuario
+        +desfazer() Usuario
+    }
+
+    class ComandoAtualizarUsuario {
+        -controlador: ControladorUsuario
+        -repositorio: RepositorioUsuarios
+        -memento: Optional~UsuarioMemento~
+        -usuario_alvo: Optional~Usuario~
+        +executar() Usuario
+        +desfazer() Usuario
+    }
+
+    class UsuarioMemento {
+        -estado: dict
+        +get_estado() dict
+    }
+
+    FacadeSingletonController "1" *-- "0..1" Comando : Invocador e Zelador
+    Comando <|.. ComandoAtualizarUsuario
+    ComandoAtualizarUsuario --> ControladorUsuario : delega a atualização
+    ComandoAtualizarUsuario --> RepositorioUsuarios : consulta e persiste restauração
+    ComandoAtualizarUsuario "1" --> "0..1" Usuario : mantém referência do alvo
+    ComandoAtualizarUsuario "1" *-- "0..1" UsuarioMemento : gerencia temporariamente
+    Usuario ..> UsuarioMemento : cria/restaura (Originator)
+    
+    note for FacadeSingletonController "Mantém somente _ultimo_comando_desfazivel; depois do desfazimento bem-sucedido, limpa o histórico."
+    note for Comando "Interface abstrata da camada de aplicação para encapsular a operação de atualização e permitir seu desfazimento."
+    note for ComandoAtualizarUsuario "Command concreto: delega a atualização ao ControladorUsuario e mantém temporariamente o memento necessário para desfazer."
+    note for UsuarioMemento "Implementado na camada de dominio, guarda um deepcopy do dicionario de atributos do Usuario antes da edicao."
     note for PoliticaCredenciais "Módulo politica_credenciais.py, composto por funções sem instanciação. Login: não vazio, até 12 caracteres e sem números. Senha (política padrão do AWS IAM): de 8 a 128 caracteres, ao menos 3 dos 4 tipos (maiúsculas, minúsculas, números e especiais) e diferente do login e do e-mail."
     note for ErroValidacaoCampo "Herda de ValueError. Guarda todos os motivos da recusa."
     note for DadosUsuarioInvalidos "Herda de ValueError. Reúne as mensagens de todos os validadores."
@@ -1072,3 +1110,5 @@ nas ADRs correspondentes.
 | **Singleton** | Implementado | `FacadeSingletonController.obter_instancia` | Mantém uma instância da fachada por processo e centraliza sua configuração. |
 | **Adapter** | Implementado | `AdaptadorLogging`, em `source/infraestrutura/logs/`, que implementa o contrato `LoggerAplicacao` e delega ao módulo `logging`, convertendo `NivelEvento` nos níveis da biblioteca ([ADR-0010](./07-arquitetura/adr/0010-adapter-para-logging.md)) | Isola a aplicação da API da biblioteca de logging; os logs registram eventos operacionais, não servem de fonte das estatísticas de acesso. |
 | **Template Method** | Implementado | `TemplateRelatorioAcesso`, especializado por `RelatorioAcessoHTML` e `RelatorioAcessoCSV`, em `source/aplicacao/relatorios/` ([ADR-0011](./07-arquitetura/adr/0011-template-method-para-relatorios-de-acesso.md)) | Compartilha o fluxo de consulta e geração do relatório, permitindo especializar a apresentação de cada formato. |
+| **Command** | Implementado | Interface abstrata `Comando` e Command concreto `ComandoAtualizarUsuario` (camada de Aplicação). O comando captura o estado anterior, delega a atualização ao `ControladorUsuario` e solicita ao repositório a persistência da restauração. `FacadeSingletonController` atua como Invocador e Zelador, mantendo somente `_ultimo_comando_desfazivel` e limpando-o após o desfazimento bem-sucedido. ([ADR-0012](./07-arquitetura/adr/0012-command-e-memento-para-desfazer.md)) | Encapsula a atualização de usuário e permite desfazer somente a atualização concluída com sucesso mais recente durante a execução atual. |
+| **Memento** | Implementado | O objeto `Usuario` atua como Originator (criando e restaurando a partir do `UsuarioMemento` no domínio). A cópia profunda (`deepcopy` do `__dict__`) garante a proteção do estado original. ([ADR-0012](./07-arquitetura/adr/0012-command-e-memento-para-desfazer.md)) | Permite capturar e preservar o estado interno (snapshot) da entidade antes de uma atualização sem violar seu encapsulamento, para posterior reversão no caso de uso "Desfazer". |

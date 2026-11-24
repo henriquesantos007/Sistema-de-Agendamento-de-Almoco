@@ -225,6 +225,20 @@ def tentar_remover_usuario(fachada: FacadeSingletonController, usuario_id: int, 
     print("-----------------------------------------\n")
 
 
+def tentar_desfazer_atualizacao_usuario(fachada: FacadeSingletonController, titulo: str, id_exibicao: int) -> None:
+    print(f"{titulo}\n-----------------------------------------")
+    if fachada.desfazer_ultima_atualizacao_usuario():
+        print("Sucesso! A última atualização foi revertida pelo sistema.")
+        try:
+            usr_revertido = fachada.buscar_usuario(id_exibicao)
+            imprimir_detalhes_usuario(usr_revertido, titulo="\nEstado revertido (Depois):")
+        except ValueError:
+            pass
+    else:
+        print("Aviso: Não há nenhuma atualização recente armazenada para desfazer.")
+    print("-----------------------------------------\n")
+
+
 def tentar_gerar_relatorio_acessos(fachada: FacadeSingletonController, formato: str) -> None:
     try:
         documento = fachada.gerar_relatorio_acessos(formato)
@@ -297,11 +311,19 @@ def executar_cenario_demonstracao(fachada: FacadeSingletonController) -> None:
     tentar_remover_usuario(fachada, 3, 'Removendo "tempuser":')
     tentar_remover_usuario(fachada, 999, "Removendo id Inexistente:")
 
+    print("\n=========================================\n5 - TESTE DE DESFAZER ATUALIZAÇÃO\n=========================================\n")
+    
+    # Tenta desfazer a Atualização 02 que foi feita lá no Passo 3
+    tentar_desfazer_atualizacao_usuario(fachada, "Desfazendo a Atualização 02 (Usuário 1):", id_exibicao=1)
+    
+    # Tenta desfazer de novo para demonstrar que o histórico limpa (só desfaz a última)
+    tentar_desfazer_atualizacao_usuario(fachada, "Tentando desfazer novamente (histórico vazio):", id_exibicao=1)
+
 
 # Relatório Final
 
 def exibir_relatorio_final(fachada: FacadeSingletonController) -> None:
-    print("\n=========================================\n5 - LISTAGEM DE ENTIDADES\n=========================================")
+    print("\n=========================================\n6 - LISTAGEM DE ENTIDADES\n=========================================")
     try:
         usuarios = fachada.listar_usuarios()
         restaurantes = fachada.listar_restaurantes()
@@ -339,6 +361,7 @@ def menu_interativo_usuarios(fachada: FacadeSingletonController) -> None:
         print("[ 3 ] Buscar por ID")
         print("[ 4 ] Atualizar Existente")
         print("[ 5 ] Remover")
+        print("[ 6 ] Desfazer Última Atualização")
         print("[ 0 ] Voltar ao Menu Principal")
         
         opcao = input("Escolha uma opção: ").strip()
@@ -400,6 +423,14 @@ def menu_interativo_usuarios(fachada: FacadeSingletonController) -> None:
                 print("Usuário removido.")
             except ValueError as e:
                 print(f"Erro: {e}")
+
+        elif opcao == '6':
+            print("Tentando desfazer a última atualização...")
+            if fachada.desfazer_ultima_atualizacao_usuario():
+                print("Sucesso! A última atualização foi revertida pelo sistema.")
+            else :
+                print("Aviso: Não há nenhuma atualização recente armazenada para desfazer.")
+
         else:
             print("Opção inválida.")
 

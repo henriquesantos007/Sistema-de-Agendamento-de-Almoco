@@ -21,15 +21,16 @@ Perfis de usuário do sistema:
 
 Os casos ⭐ UC05 e UC06 correspondem à **Sprint 1** (cadastro e listagem).
 Os casos ⭐ UC08, UC20 e UC21 registram as operações de edição, consulta por
-identificador e remoção de usuários concluídas na **Sprint 3**, junto ao CRUD
-de restaurantes e à fachada. Com UC05 e UC06, esses casos documentam o CRUD
-de usuários. Não há telas web dedicadas. O cenário em `main.py` demonstra o
-cadastro, a atualização e a remoção de
-usuários, além da listagem no relatório final. A consulta individual UC20 está
-disponível pela fachada, mas não é exercitada por esse cenário. No CRUD de
-restaurantes, o cenário demonstra cadastro, remoção e listagem final; consulta
-e atualização estão disponíveis pela fachada, mas não são exercitadas pela
-CLI. As descrições detalhadas dos casos de uso estão em
+identificador e remoção de usuários concluídas na **Sprint 3**. O UC23 registra
+o desfazimento da atualização mais recente, introduzido na **Sprint 5**. Com
+UC05 e UC06, esses casos documentam o gerenciamento de usuários. Não há telas
+web dedicadas. O cenário em `main.py` demonstra o cadastro, a atualização, o
+desfazimento e a remoção de usuários, além da listagem no relatório final. A
+consulta individual UC20 está disponível pela fachada, mas não é exercitada
+por esse cenário. No CRUD de restaurantes, o cenário demonstra cadastro,
+remoção e listagem final; consulta e atualização estão disponíveis pela
+fachada, mas não são exercitadas pela CLI. As descrições dos casos de uso
+selecionados estão em
 [casos de uso detalhados](./detalhados.md).
 
 ```mermaid
@@ -53,6 +54,7 @@ flowchart LR
         UC11(["Vincular Gestor a Restaurante"])
         UC20(["⭐ Consultar Usuário"])
         UC21(["⭐ Remover Usuário"])
+        UC23(["⭐ Desfazer Atualização de Usuário"])
     end
 
     estudante --> UC01
@@ -71,6 +73,7 @@ flowchart LR
     admin --> UC09
     admin --> UC20
     admin --> UC21
+    admin --> UC23
 
     UC01 -. "«include»" .-> UC10
     UC05 -. "«include»" .-> UC10
@@ -89,6 +92,7 @@ flowchart LR
 | **UC10 Validar Dados do Usuário** | Verifica campos obrigatórios, formato de e-mail, e-mail único e telefone único (Estudante), tanto no cadastro quanto na edição. |
 | ⭐ **UC20 Consultar Usuário** | Administrador consulta os dados de um usuário pelo identificador; informa quando o usuário não existe. |
 | ⭐ **UC21 Remover Usuário** | Administrador remove um usuário pelo identificador; informa quando o usuário não existe. |
+| ⭐ **UC23 Desfazer Atualização de Usuário** | Administrador restaura o estado anterior à atualização concluída com sucesso mais recente; só há um desfazimento disponível e, sem atualização no histórico, os usuários permanecem inalterados. |
 
 ---
 
@@ -146,8 +150,10 @@ Cada `GestorRestaurante` deve referenciar um restaurante existente. A associaç�
 
 ## 3. Relatórios de Acesso (Sprint 4)
 
-O UC22 está especificado na change OpenSpec
-[relatorio-de-acessos](../../openspec/changes/relatorio-de-acessos/proposal.md).
+O UC22 e os requisitos RF16 e RF17 foram introduzidos na change OpenSpec
+[relatorio-de-acessos](../../openspec/changes/archive/2026-11-11-relatorio-de-acessos/proposal.md)
+e estão na especificação canônica de
+[relatórios de acesso](../../openspec/specs/relatorios-de-acesso/spec.md).
 Casos de uso marcados com ⭐ fazem parte da **Sprint 4**. O relatório é
 calculado sobre os registros de acesso disponíveis, sem filtro de período, e
 está disponível pela fachada; o cenário em `main.py` demonstra a geração em
@@ -234,6 +240,7 @@ flowchart LR
             UC_VincularGestor(["Vincular Gestor a Restaurante (UC11)"])
             UC_ConsultarUsuario(["Consultar Usuário (UC20)"])
             UC_RemoverUsuario(["Remover Usuário (UC21)"])
+            UC_DesfazerAtualizacao(["Desfazer Atualização de Usuário (UC23)"])
             UC12(["Cadastrar Restaurante (UC12)"])
             UC13(["Consultar Restaurante (UC13)"])
             UC14(["Listar Restaurantes (UC14)"])
@@ -294,6 +301,7 @@ flowchart LR
     admin --> UC_AtivarDesativar
     admin --> UC_ConsultarUsuario
     admin --> UC_RemoverUsuario
+    admin --> UC_DesfazerAtualizacao
     admin --> UC12
     admin --> UC13
     admin --> UC14
@@ -321,8 +329,8 @@ flowchart LR
 ```
 
 O diagrama inclui os casos especializados de cadastro, consulta e listagem de
-usuários, edição e remoção de usuários, validação e resumo, o relatório de
-acessos (UC22), além dos fluxos de estudante,
+usuários, edição, desfazimento de atualização e remoção de usuários, validação
+e resumo, o relatório de acessos (UC22), além dos fluxos de estudante,
 gestor, pagamento e notificações. Os diagramas de usuários, restaurantes e
 relatórios de acesso acima detalham seus respectivos subconjuntos.
 
@@ -366,13 +374,13 @@ relatórios de acesso acima detalham seus respectivos subconjuntos.
 
 ## Rastreabilidade dos requisitos funcionais
 
-A tabela relaciona todos os requisitos funcionais canônicos às suas
-realizações em casos de uso. RF05 é transversal: a escolha do armazenamento
-ocorre na inicialização e seus efeitos são observáveis nos casos de uso de
-cadastro e listagem das duas entidades. RF16 e RF17 estão implementados, mas
-ainda não são canônicos: estão especificados na change
-[relatorio-de-acessos](../../openspec/changes/relatorio-de-acessos/specs/relatorios-de-acesso/spec.md),
-que ainda não foi arquivada.
+A tabela relaciona os requisitos funcionais às suas realizações em casos de
+uso. RF05 é transversal: a escolha do armazenamento ocorre na inicialização e
+seus efeitos são observáveis nos casos de uso de cadastro e listagem das duas
+entidades. RF16–RF18 estão implementados e especificados canonicamente em
+[relatórios de acesso](../../openspec/specs/relatorios-de-acesso/spec.md) e
+[usuários](../../openspec/specs/usuarios/spec.md); as changes correspondentes
+foram arquivadas.
 
 | Requisito | Casos de uso relacionados |
 |-----------|---------------------------|
@@ -393,6 +401,7 @@ que ainda não foi arquivada.
 | RF15 — Remover usuário | UC21 |
 | RF16 — Consultar estatísticas de acesso | UC22 |
 | RF17 — Gerar relatório de acessos em HTML ou CSV | UC22 |
+| RF18 — Desfazer a última atualização de usuário | UC23 |
 
 As descrições normativas e os cenários de cada requisito estão nas
 [especificações OpenSpec](../../openspec/specs/).
