@@ -564,6 +564,7 @@ classDiagram
     class ControladorUsuario {
         -repositorio: RepositorioUsuarios
         -validadorUsuario: ValidadorUsuario
+        -fabrica: FabricaUsuario
         +cadastrar(dados: DadosUsuario) Usuario
         +listar_todos() List~Usuario~
         +contar() int
@@ -583,6 +584,27 @@ classDiagram
         +telefone: String
         +matricula: String
         +restauranteId: Long
+    }
+
+    class DadosBasicosUsuario {
+        <<valor, implementado>>
+        +nome: String
+        +login: String
+        +email: String
+        +senha: String
+        +telefone: String
+        +id: Optional~int~
+        +data_cadastro: Optional~DateTime~
+        +status: StatusUsuario
+    }
+
+    class FabricaUsuario {
+        <<Factory Method, implementado>>
+        +criar(perfil: Perfil, basicos: DadosBasicosUsuario, dados: DadosUsuario) Usuario
+    }
+
+    class Perfil {
+        <<enumeration, implementado>>
     }
 
     class DadosUsuarioInvalidos {
@@ -637,9 +659,14 @@ classDiagram
 
     ControladorUsuario --> ValidadorUsuario : usa
     ControladorUsuario --> RepositorioUsuarios : usa
+    ControladorUsuario --> FabricaUsuario : usa
+    ControladorUsuario ..> Perfil : normaliza
     ControladorUsuario ..> DadosUsuario : recebe
-    ControladorUsuario ..> Usuario : cria
+    ControladorUsuario ..> Usuario : retorna
     ControladorUsuario ..> DadosUsuarioInvalidos : lança
+    FabricaUsuario ..> DadosBasicosUsuario : recebe
+    FabricaUsuario ..> DadosUsuario : recebe
+    FabricaUsuario ..> Usuario : cria
 
     ValidadorUsuario "1" o-- "0..*" ValidadorUsuarioBase : compõe
 
@@ -1020,6 +1047,12 @@ classDiagram
         INATIVO
         BLOQUEADO
     }
+    class Perfil {
+        <<enumeration>>
+        ESTUDANTE
+        GESTOR_RESTAURANTE
+        ADMINISTRADOR
+    }
     class StatusRestaurante {
         <<enumeration>>
         ATIVO
@@ -1109,6 +1142,7 @@ nas ADRs correspondentes.
 | Padrão | Situação | Onde foi aplicado | Justificativa |
 |--------|----------|-------------------|---------------|
 | **Abstract Factory** | Implementado | `FabricaRepositorios`, com `FabricaRepositoriosMemoria` e `FabricaRepositoriosArquivo`, em `fabrica_repositorios.py`; a fábrica concreta é escolhida por `escolher_fabrica`, no `main.py`, a partir de `--armazenamento`. Substituiu a fábrica simples anterior, de funções de módulo ([ADR-0009](./07-arquitetura/adr/0009-repository-e-factory-para-entidades-persistidas.md)) | Garante que usuários, restaurantes e acessos usem a mesma família de persistência (memória ou arquivo) e concentra a escolha do armazenamento em um só lugar. |
+| **Factory Method** | Implementado | `FabricaUsuario`, em `source/aplicacao/usuarios/fabrica_usuario.py`, associa cada `Perfil` à função que cria o tipo correspondente; `ControladorUsuario` delega a construção à fábrica. | Separa a criação dos tipos concretos de usuário do fluxo de cadastro e centraliza a seleção pelo perfil. |
 | **Repository** | Implementado | `RepositorioUsuarios`, `RepositorioRestaurantes` e `RepositorioAcessos`, com implementações em memória e arquivo ([ADR-0009](./07-arquitetura/adr/0009-repository-e-factory-para-entidades-persistidas.md)) | Mantém os controladores dependentes dos contratos do domínio, isolando-os dos detalhes de persistência. |
 | **Composite** | Implementado | `ValidadorUsuario` e seus validadores | Agrupa validadores individuais e permite executá-los uniformemente, reunindo os motivos de validação. |
 | **Facade** | Implementado | `FacadeSingletonController` | Oferece uma interface única para as operações dos controladores de usuários e restaurantes e para o relatório de acessos. |
