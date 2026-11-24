@@ -119,9 +119,10 @@ e não podem substituí-los silenciosamente.
   `remover(id)` ao repositório. No armazenamento em arquivo, a alteração é
   gravada antes de a operação ser considerada concluída.
 
-As implementações em arquivo usam gravação atômica. O rollback da atualização
-de usuário quando a gravação falha ainda requer correção; a garantia esperada
-de preservação do estado anterior está especificada em
+As implementações em arquivo usam gravação atômica. Na atualização de usuário,
+o controlador altera uma cópia da entidade; se a gravação falhar, o repositório
+de arquivo restaura em memória o estado anterior. A garantia de preservação
+está especificada em
 [NF-CON-01](../../openspec/specs/rnf/confiabilidade/spec.md).
 
 ## Contagem consolidada

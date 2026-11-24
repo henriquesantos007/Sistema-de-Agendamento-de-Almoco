@@ -86,8 +86,8 @@ O perfil e os dados específicos dele (matrícula de Estudante ou restaurante
 vinculado de Gestor) são preservados na edição. A validação de unicidade
 desconsidera os dados que já pertencem ao usuário editado. A senha é
 obrigatória pela validação atual, deve ficar mascarada e nunca deve aparecer
-em mensagens. A implementação atual ainda precisa gerar hash ao atualizar a
-senha, conforme [NF-SEG-02](../../openspec/specs/rnf/seguranca/spec.md).
+em mensagens. A implementação gera hash ao cadastrar e atualizar a senha,
+conforme [NF-SEG-02](../../openspec/specs/rnf/seguranca/spec.md).
 
 ## UC21 — Remover Usuário
 

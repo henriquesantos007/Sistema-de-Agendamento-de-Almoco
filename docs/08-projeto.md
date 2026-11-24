@@ -1002,7 +1002,7 @@ classDiagram
     RepositorioUsuariosArquivo ..> ErroPersistencia : lança
 
     note for ErroPersistencia "Herda de ErroPersistenciaBase (source/dominio/excecoes.py), base comum às ErroPersistencia de usuários e de restaurantes. Encapsula IOError e falhas de serialização; a causa original fica em __cause__."
-    note for RepositorioUsuariosArquivo "Serializa com pickle em arquivo binário. A gravação é atômica (arquivo temporário e troca). O rollback da atualização requer correção para garantir restauração do estado anterior."
+    note for RepositorioUsuariosArquivo "Serializa com pickle em arquivo binário. A gravação é atômica (arquivo temporário e troca). Se a atualização falhar ao gravar, o estado anterior em memória é restaurado."
     note for FabricaRepositorios "Módulo fabrica_repositorios.py. main.py escolhe a fábrica concreta por --armazenamento: memoria (padrão) ou arquivo."
     note for Usuario "Detalhado no diagrama de domínio"
 ```

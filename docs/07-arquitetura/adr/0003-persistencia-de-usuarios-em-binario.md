@@ -31,7 +31,7 @@ Descartar o SQLite: não criar o pacote `persistencia/sqlite/` e remover a opç�
 - O tratamento de exceções exigido é atendido para `IOError`; não há tratamento de erros de banco de dados, pois o sistema não usa banco.
 - Um novo mecanismo, inclusive um banco de dados, pode ser adicionado criando um pacote em `persistencia/` e registrando-o na fábrica; nesse caso, a decisão deve ser registrada em um novo ADR.
 - O `pickle` só deve carregar arquivos gerados pela própria aplicação; arquivos gerados antes de mudanças nas classes de domínio ficam incompatíveis e geram `ErroPersistencia`.
-- A reversão da atualização depende de preservar uma cópia do estado anterior à mutação da entidade. A implementação atual pode alterar a instância mantida pelo repositório antes de criar a cópia de segurança; é necessário corrigir esse fluxo e cobri-lo com teste de falha de gravação.
+- A implementação inicial podia alterar a instância mantida pelo repositório antes de criar a cópia de segurança. Esse fluxo foi corrigido: o controlador atualiza uma cópia da entidade e o repositório em arquivo restaura o estado em memória se a gravação falhar; o cenário é coberto por teste de falha de persistência.
 - O repositório em arquivo não trata acesso simultâneo de vários processos.
 - Os arquivos de dados ficam em `dados/` e não devem ser versionados.
 
