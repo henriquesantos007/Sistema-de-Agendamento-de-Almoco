@@ -7,7 +7,8 @@ nova entidade e a regra de remoção condicionada ao vínculo com gestores.
 
 Como documentação complementar, este arquivo também detalha
 **UC08 — Editar Usuário**, **UC20 — Consultar Usuário** e
-**UC21 — Remover Usuário**, operações implementadas no CRUD de usuários. Os atores,
+**UC21 — Remover Usuário**, operações implementadas no CRUD de usuários, e
+**UC23 — Desfazer Atualização de Usuário**, da Sprint 5. Os atores,
 precondições e fluxos seguem as
 regras de [usuários](../../openspec/specs/usuarios/spec.md) e
 [restaurantes](../../openspec/specs/restaurantes/spec.md), e os RNFs de
@@ -109,6 +110,33 @@ fachada, mas não são exercitadas pelo cenário da CLI.
 
 - **2a. Usuário inexistente:** o sistema informa "Usuário com ID '<id>' não encontrado." e não altera o repositório.
 - **3a. Falha de persistência:** o sistema informa a falha e preserva o arquivo e o estado em memória anteriores à operação.
+
+## UC23 — Desfazer Atualização de Usuário
+
+Requisito relacionado: RF18, especificado em [usuários](../../openspec/specs/usuarios/spec.md).
+
+| Campo | Descrição |
+|---|---|
+| Ator principal | Administrador |
+| Objetivo | Desfazer a atualização de usuário concluída com sucesso mais recentemente durante a execução atual. |
+| Precondições | Existe pelo menos uma atualização concluída disponível para desfazer. |
+| Pós-condições | O estado imediatamente anterior à atualização é restaurado e persistido. O identificador, o perfil e os dados específicos do perfil são preservados. A única atualização disponível para desfazer é consumida. |
+
+### Fluxo principal
+
+1. O Administrador solicita o desfazimento da última atualização de usuário.
+2. A fachada obtém o último comando disponível para desfazer.
+3. O comando restaura o memento com o estado anterior do usuário.
+4. O estado restaurado é gravado no repositório.
+5. A fachada limpa o histórico de desfazimento.
+6. O sistema confirma o sucesso da operação.
+
+### Fluxos alternativos e adicionais
+
+- **2a. Não existe atualização disponível:** o sistema informa que não há atualização armazenada para desfazer e não altera usuários.
+- **Desfazer após duas atualizações:** se duas atualizações forem concluídas, o desfazimento restaura apenas o estado imediatamente anterior à segunda atualização.
+- **Atualização inválida após uma atualização válida:** a atualização inválida não é concluída e o histórico válido continua disponível para desfazer.
+- **Nova solicitação após o desfazimento:** como o histórico foi consumido, uma nova solicitação não desfaz nenhuma atualização.
 
 ## UC12 — Cadastrar Restaurante
 
