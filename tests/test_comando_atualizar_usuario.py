@@ -4,19 +4,11 @@ from source.aplicacao.comandos.comando_atualizar_usuario import (
     ComandoAtualizarUsuario,
 )
 from source.aplicacao.usuarios.dados_usuario import DadosUsuario
-from source.dominio.usuarios.usuario import Estudante
+from source.dominio.usuarios.usuario import DadosBasicosUsuario, Estudante
 
 
 def test_comando_atualiza_e_restaura_o_snapshot_anterior():
-    usuario = Estudante(
-        nome="Ana",
-        login="ana",
-        email="ana@example.com",
-        senha="hash",
-        telefone="83999999999",
-        matricula="2026001",
-        id=1,
-    )
+    usuario = Estudante(DadosBasicosUsuario(nome="Ana", login="ana", email="ana@example.com", senha="hash", telefone="83999999999", id=1), matricula="2026001")
     controlador = Mock()
     repositorio = Mock()
     repositorio.buscar_por_id.return_value = usuario

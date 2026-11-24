@@ -1,18 +1,10 @@
 import pytest
 
-from source.dominio.usuarios.usuario import Administrador, Estudante
+from source.dominio.usuarios.usuario import DadosBasicosUsuario, Administrador, Estudante
 
 
 def estudante(id_usuario: int) -> Estudante:
-    return Estudante(
-        nome="Ana",
-        login="ana",
-        email="ana@example.com",
-        senha="hash",
-        telefone="83999999999",
-        matricula="2026001",
-        id=id_usuario,
-    )
+    return Estudante(DadosBasicosUsuario(nome="Ana", login="ana", email="ana@example.com", senha="hash", telefone="83999999999", id=id_usuario), matricula="2026001")
 
 
 def test_memento_restaura_snapshot_profundo_da_entidade():
@@ -33,14 +25,7 @@ def test_memento_restaura_snapshot_profundo_da_entidade():
 
 def test_memento_nao_pode_ser_restaurado_em_classe_diferente():
     origem = estudante(1)
-    destino = Administrador(
-        nome="Admin",
-        login="admin",
-        email="admin@example.com",
-        senha="hash",
-        telefone="83988888888",
-        id=1,
-    )
+    destino = Administrador(DadosBasicosUsuario(nome="Admin", login="admin", email="admin@example.com", senha="hash", telefone="83988888888", id=1))
 
     with pytest.raises(ValueError, match="não pertence"):
         destino.restaurar_memento(origem.criar_memento())

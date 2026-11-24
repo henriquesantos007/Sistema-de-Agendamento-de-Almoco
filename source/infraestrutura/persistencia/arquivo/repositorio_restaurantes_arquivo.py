@@ -1,7 +1,7 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Union
+from typing import List, Tuple, Union
 
 from source.dominio.restaurantes import ErroPersistencia, Restaurante
 from source.infraestrutura.persistencia.memoria import (
@@ -57,35 +57,7 @@ class RepositorioRestaurantesArquivo(RepositorioRestaurantesMemoria):
             return
 
         try:
-            with self._caminho.open("rb") as arquivo:
-                conteudo = pickle.load(arquivo)
-
-            if not isinstance(conteudo, dict):
-                raise ValueError("estrutura do arquivo nao reconhecida")
-
-            restaurantes = conteudo.get("restaurantes")
-            proximo_id = conteudo.get("proximo_id")
-            if conteudo.get("versao") != _VERSAO_FORMATO:
-                raise ValueError("estrutura do arquivo nao reconhecida")
-            if not isinstance(restaurantes, list) or not all(
-                isinstance(item, Restaurante) for item in restaurantes
-            ):
-                raise ValueError("estrutura do arquivo nao reconhecida")
-            ids = [restaurante.id for restaurante in restaurantes]
-            if (
-                any(
-                    type(restaurante_id) is not int or restaurante_id < 1
-                    for restaurante_id in ids
-                )
-                or len(set(ids)) != len(restaurantes)
-            ):
-                raise ValueError("identificadores de restaurante invalidos")
-            if (
-                type(proximo_id) is not int
-                or proximo_id <= max(ids, default=0)
-            ):
-                raise ValueError("estrutura do arquivo nao reconhecida")
-
+            restaurantes, proximo_id = self._validar_conteudo(self._ler_arquivo())
             self._restaurantes = restaurantes
             self._proximo_id = proximo_id
         except OSError as erro:
@@ -105,6 +77,33 @@ class RepositorioRestaurantesArquivo(RepositorioRestaurantesMemoria):
             raise ErroPersistencia(
                 f"arquivo '{self._caminho}' corrompido ou em formato invalido: {erro}"
             ) from erro
+
+    def _ler_arquivo(self) -> object:
+        with self._caminho.open("rb") as arquivo:
+            return pickle.load(arquivo)
+
+    @staticmethod
+    def _validar_conteudo(conteudo: object) -> Tuple[List[Restaurante], int]:
+        if not isinstance(conteudo, dict):
+            raise ValueError("estrutura do arquivo nao reconhecida")
+
+        restaurantes = conteudo.get("restaurantes")
+        proximo_id = conteudo.get("proximo_id")
+        if conteudo.get("versao") != _VERSAO_FORMATO:
+            raise ValueError("estrutura do arquivo nao reconhecida")
+        if not isinstance(restaurantes, list) or not all(
+            isinstance(item, Restaurante) for item in restaurantes
+        ):
+            raise ValueError("estrutura do arquivo nao reconhecida")
+
+        ids = [restaurante.id for restaurante in restaurantes]
+        if any(type(i) is not int or i < 1 for i in ids) or len(set(ids)) != len(
+            restaurantes
+        ):
+            raise ValueError("identificadores de restaurante invalidos")
+        if type(proximo_id) is not int or proximo_id <= max(ids, default=0):
+            raise ValueError("estrutura do arquivo nao reconhecida")
+        return restaurantes, proximo_id
 
     def _salvar(self) -> None:
         conteudo = {
