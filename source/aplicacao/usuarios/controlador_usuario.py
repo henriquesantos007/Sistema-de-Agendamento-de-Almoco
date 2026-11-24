@@ -95,7 +95,11 @@ class ControladorUsuario:
         usuario_atualizado = deepcopy(usuario_existente)
         usuario_atualizado.nome = dados_atualizados.nome
         usuario_atualizado.email = dados_atualizados.email
-        usuario_atualizado.senha = gerar_hash_senha(dados_atualizados.senha)
+        usuario_atualizado.senha = (
+            usuario_existente.senha
+            if dados_atualizados.senha == usuario_existente.senha
+            else gerar_hash_senha(dados_atualizados.senha)
+        )
         usuario_atualizado.login = (dados_atualizados.login or "").strip()
         usuario_atualizado.telefone = normalizar_telefone(
             dados_atualizados.telefone

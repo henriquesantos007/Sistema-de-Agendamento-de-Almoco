@@ -669,6 +669,7 @@ classDiagram
     class FacadeSingletonController {
         <<facade>>
         -_ultimo_comando_desfazivel: Optional~Comando~
+        +atualizar_usuario(usuario_id, dados) Usuario
         +desfazer_ultima_atualizacao_usuario(): boolean
     }
 
@@ -681,29 +682,33 @@ classDiagram
     class ComandoAtualizarUsuario {
         -controlador: ControladorUsuario
         -repositorio: RepositorioUsuarios
+        -_id_usuario: int
         -memento: Optional~UsuarioMemento~
         -usuario_alvo: Optional~Usuario~
+        +usuario_id: int
         +executar() Usuario
         +desfazer() Usuario
     }
 
     class UsuarioMemento {
         -estado: dict
-        +get_estado() dict
+        -tipo_origem: type
+        -id_origem: Optional~int~
+        -_estado_para(tipo_destino, id_destino) dict
     }
 
-    FacadeSingletonController "1" *-- "0..1" Comando : Invocador e Zelador
+    FacadeSingletonController "1" *-- "0..1" Comando : Invocador; retém único comando
     Comando <|.. ComandoAtualizarUsuario
     ComandoAtualizarUsuario --> ControladorUsuario : delega a atualização
     ComandoAtualizarUsuario --> RepositorioUsuarios : consulta e persiste restauração
     ComandoAtualizarUsuario "1" --> "0..1" Usuario : mantém referência do alvo
-    ComandoAtualizarUsuario "1" *-- "0..1" UsuarioMemento : gerencia temporariamente
+    ComandoAtualizarUsuario "1" *-- "0..1" UsuarioMemento : Caretaker do snapshot
     Usuario ..> UsuarioMemento : cria/restaura (Originator)
     
-    note for FacadeSingletonController "Mantém somente _ultimo_comando_desfazivel; depois do desfazimento bem-sucedido, limpa o histórico."
+    note for FacadeSingletonController "Invocador; retém somente _ultimo_comando_desfazivel e limpa a referência após desfazer com sucesso."
     note for Comando "Interface abstrata da camada de aplicação para encapsular a operação de atualização e permitir seu desfazimento."
-    note for ComandoAtualizarUsuario "Command concreto: delega a atualização ao ControladorUsuario e mantém temporariamente o memento necessário para desfazer."
-    note for UsuarioMemento "Implementado na camada de dominio, guarda um deepcopy do dicionario de atributos do Usuario antes da edicao."
+    note for ComandoAtualizarUsuario "Command concreto e Caretaker: delega ao ControladorUsuario e mantém o Memento necessário para desfazer."
+    note for UsuarioMemento "Guarda uma cópia profunda e associa o snapshot ao tipo e ID de origem; o acesso interno devolve uma cópia."
     note for PoliticaCredenciais "Módulo politica_credenciais.py, composto por funções sem instanciação. Login: não vazio, até 12 caracteres e sem números. Senha (política padrão do AWS IAM): de 8 a 128 caracteres, ao menos 3 dos 4 tipos (maiúsculas, minúsculas, números e especiais) e diferente do login e do e-mail."
     note for ErroValidacaoCampo "Herda de ValueError. Guarda todos os motivos da recusa."
     note for DadosUsuarioInvalidos "Herda de ValueError. Reúne as mensagens de todos os validadores."
@@ -1110,5 +1115,5 @@ nas ADRs correspondentes.
 | **Singleton** | Implementado | `FacadeSingletonController.obter_instancia` | Mantém uma instância da fachada por processo e centraliza sua configuração. |
 | **Adapter** | Implementado | `AdaptadorLogging`, em `source/infraestrutura/logs/`, que implementa o contrato `LoggerAplicacao` e delega ao módulo `logging`, convertendo `NivelEvento` nos níveis da biblioteca ([ADR-0010](./07-arquitetura/adr/0010-adapter-para-logging.md)) | Isola a aplicação da API da biblioteca de logging; os logs registram eventos operacionais, não servem de fonte das estatísticas de acesso. |
 | **Template Method** | Implementado | `TemplateRelatorioAcesso`, especializado por `RelatorioAcessoHTML` e `RelatorioAcessoCSV`, em `source/aplicacao/relatorios/` ([ADR-0011](./07-arquitetura/adr/0011-template-method-para-relatorios-de-acesso.md)) | Compartilha o fluxo de consulta e geração do relatório, permitindo especializar a apresentação de cada formato. |
-| **Command** | Implementado | Interface abstrata `Comando` e Command concreto `ComandoAtualizarUsuario` (camada de Aplicação). O comando captura o estado anterior, delega a atualização ao `ControladorUsuario` e solicita ao repositório a persistência da restauração. `FacadeSingletonController` atua como Invocador e Zelador, mantendo somente `_ultimo_comando_desfazivel` e limpando-o após o desfazimento bem-sucedido. ([ADR-0012](./07-arquitetura/adr/0012-command-e-memento-para-desfazer.md)) | Encapsula a atualização de usuário e permite desfazer somente a atualização concluída com sucesso mais recente durante a execução atual. |
-| **Memento** | Implementado | O objeto `Usuario` atua como Originator (criando e restaurando a partir do `UsuarioMemento` no domínio). A cópia profunda (`deepcopy` do `__dict__`) garante a proteção do estado original. ([ADR-0012](./07-arquitetura/adr/0012-command-e-memento-para-desfazer.md)) | Permite capturar e preservar o estado interno (snapshot) da entidade antes de uma atualização sem violar seu encapsulamento, para posterior reversão no caso de uso "Desfazer". |
+| **Command** | Implementado | Interface abstrata `Comando` e Command concreto `ComandoAtualizarUsuario` (camada de Aplicação). O comando delega a atualização ao `ControladorUsuario` e atua como *Caretaker* do `UsuarioMemento`. `FacadeSingletonController` atua como *Invoker* e mantém somente `_ultimo_comando_desfazivel`, limpando-o após o desfazimento bem-sucedido. ([ADR-0012](./07-arquitetura/adr/0012-command-e-memento-para-desfazer.md)) | Encapsula a atualização de usuário e permite desfazer somente a atualização concluída com sucesso mais recente durante a execução atual. |
+| **Memento** | Implementado | `Usuario` atua como *Originator* e `UsuarioMemento` guarda o snapshot profundo, associado à classe e ao ID de origem. O acesso ao estado é privado por convenção e devolve uma cópia profunda. ([ADR-0012](./07-arquitetura/adr/0012-command-e-memento-para-desfazer.md)) | Permite restaurar o estado anterior sem expor o dicionário interno e rejeita snapshot de outra classe ou identificador. |

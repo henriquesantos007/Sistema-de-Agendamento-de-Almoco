@@ -78,6 +78,25 @@ def test_deve_atualizar_usuario_com_sucesso_mantendo_dados_unicos(controlador):
     assert verificar_senha(novos_dados.senha, usuario_atualizado.senha)
 
 
+def test_atualizacao_sem_troca_de_senha_preserva_hash_atual(controlador):
+    usuario = controlador.buscar_por_id(1)
+    hash_atual = usuario.senha
+    dados_atualizados = DadosUsuario(
+        perfil="estudante",
+        nome="Ana Silva",
+        login="anasilva",
+        email="ana@example.com",
+        senha=hash_atual,
+        telefone="83999990001",
+        matricula="2026001",
+    )
+
+    usuario_atualizado = controlador.atualizar(1, dados_atualizados)
+
+    assert usuario_atualizado.senha == hash_atual
+    assert verificar_senha("Senha123!", usuario_atualizado.senha)
+
+
 def test_falha_ao_persistir_atualizacao_preserva_estado_em_memoria_e_arquivo(
     tmp_path,
     monkeypatch,

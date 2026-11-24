@@ -2,6 +2,7 @@ import pytest
 
 from source.aplicacao.fachada.facade_singleton_controller import FacadeSingletonController
 from source.aplicacao.usuarios.dados_usuario import DadosUsuario
+from source.dominio.usuarios.excecoes import ErroPersistencia
 from source.dominio.usuarios.senha import verificar_senha
 from source.infraestrutura.persistencia.arquivo import RepositorioUsuariosArquivo
 from source.infraestrutura.persistencia.memoria.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
@@ -126,6 +127,53 @@ def test_deve_persistir_desfazimento_em_repositorio_de_arquivo(
     assert usuario_reaberto.perfil == "estudante"
     assert usuario_reaberto.matricula == "2026001"
     assert verificar_senha("Senha@123", usuario_reaberto.senha)
+
+
+def test_falha_ao_persistir_desfazimento_preserva_estado_e_permite_retentativa(
+    fachada_com_arquivo,
+    monkeypatch,
+):
+    fachada, caminho = fachada_com_arquivo
+    usuario = fachada.cadastrar_usuario(DadosUsuario(
+        perfil="estudante",
+        nome="Ana Original",
+        login="anasilva",
+        email="ana@example.com",
+        senha="Senha@123",
+        telefone="83999999999",
+        matricula="2026001",
+    ))
+    fachada.atualizar_usuario(usuario.id, DadosUsuario(
+        perfil="estudante",
+        nome="Ana Modificada",
+        login="anasilva",
+        email="ana.mod@example.com",
+        senha="NovaSenha@123",
+        telefone="83900000000",
+        matricula="2026001",
+    ))
+    repositorio = fachada._repositorio_usuarios
+    salvar = repositorio._salvar
+
+    def falhar_salvamento():
+        raise ErroPersistencia("falha simulada")
+
+    monkeypatch.setattr(repositorio, "_salvar", falhar_salvamento)
+    with pytest.raises(ErroPersistencia, match="falha simulada"):
+        fachada.desfazer_ultima_atualizacao_usuario()
+
+    assert repositorio.buscar_por_id(usuario.id).nome == "Ana Modificada"
+    assert (
+        RepositorioUsuariosArquivo(caminho).buscar_por_id(usuario.id).nome
+        == "Ana Modificada"
+    )
+
+    monkeypatch.setattr(repositorio, "_salvar", salvar)
+    assert fachada.desfazer_ultima_atualizacao_usuario() is True
+    assert (
+        RepositorioUsuariosArquivo(caminho).buscar_por_id(usuario.id).nome
+        == "Ana Original"
+    )
 
 
 def test_nao_deve_desfazer_se_o_historico_estiver_vazio(fachada_configurada):

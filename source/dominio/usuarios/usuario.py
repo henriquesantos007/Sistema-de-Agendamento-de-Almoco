@@ -40,11 +40,12 @@ class Usuario(ABC):
     def criar_memento(self) -> UsuarioMemento:
         """Cria um memento contendo o snapshot de seu estado atual."""
         # Captura todos os atributos atuais do objeto dinamicamente
-        return UsuarioMemento(self.__dict__)
+        return UsuarioMemento(self.__dict__, type(self), self.id)
 
     def restaurar_memento(self, memento: UsuarioMemento) -> None:
         """Usa o Memento para restaurar seu estado interno original."""
-        estado_restaurado = memento.get_estado()
+        estado_restaurado = memento._estado_para(type(self), self.id)
+        self.__dict__.clear()
         self.__dict__.update(estado_restaurado)
 
 
