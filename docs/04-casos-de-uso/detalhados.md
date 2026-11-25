@@ -54,7 +54,7 @@ fachada, mas não são exercitadas pelo cenário da CLI.
 | Ator principal | Administrador |
 | Objetivo | Atualizar os dados editáveis de um usuário cadastrado. |
 | Precondições | O Administrador está autenticado e informa o identificador de um usuário existente. |
-| Pós-condições | Nome, login, e-mail, senha e telefone são atualizados; o identificador, o perfil e os dados específicos do perfil são preservados. A senha permanece armazenada somente como hash. |
+| Pós-condições | Nome, login, e-mail, senha e telefone são atualizados; o identificador, o perfil e os dados específicos do perfil são preservados. A senha permanece armazenada somente como hash. O estado imediatamente anterior da atualização passa a ficar disponível em memória para desfazimento (UC23) |
 
 ### Fluxo principal
 
@@ -63,14 +63,14 @@ fachada, mas não são exercitadas pelo cenário da CLI.
 3. O Administrador informa nome, login, e-mail, senha e telefone, preservando os demais dados do usuário.
 4. O Administrador confirma a atualização.
 5. O sistema valida os campos e regras de login, senha e unicidade, ignorando os dados únicos que já pertencem ao usuário editado.
-6. O sistema aplica as alterações sem modificar o identificador, o perfil, a matrícula ou o restaurante vinculado.
-7. O sistema persiste a atualização e confirma o sucesso sem exibir a senha nem seu hash.
+6. O sistema captura o estado atual do usuário e aplica as alterações sem modificar o identificador, o perfil, a matrícula ou o restaurante vinculado.
+7. O sistema persiste a atualização, registra a operação como a última atualização desfazível e confirma o sucesso sem exibir a senha nem seu hash.
 
 ### Fluxos alternativos e de exceção
 
 - **2a. Usuário inexistente:** o sistema informa "Usuário com ID '<id>' não encontrado." e não altera dados.
-- **5a. Dados inválidos ou duplicados:** o sistema apresenta todos os motivos de recusa em uma única resposta e preserva os dados atuais.
-- **7a. Falha de persistência:** o sistema informa a falha e preserva o arquivo e o estado em memória anteriores à operação.
+- **5a. Dados inválidos ou duplicados:** o sistema apresenta todos os motivos de recusa em uma única resposta, preserva os dados atuais e mantém intacto eventual histórico anterior de desfazimento.
+- **7a. Falha de persistência:** o sistema informa a falha e preserva o arquivo, o estado em memória e o histórico de desfazimento anteriores à operação.
 
 ## UC20 — Consultar Usuário
 
@@ -98,19 +98,20 @@ fachada, mas não são exercitadas pelo cenário da CLI.
 | Ator principal | Administrador |
 | Objetivo | Remover um usuário cadastrado pelo identificador. |
 | Precondições | O Administrador está autenticado e informa o identificador de um usuário existente. |
-| Pós-condições | O usuário deixa de constar no repositório e a quantidade de usuários é atualizada. |
+| Pós-condições | O usuário deixa de constar no repositório e a quantidade de usuários é atualizada. Caso o usuário removido corresponda à última atualização desfazível (UC23), esse histórico é descartado. |
 
 ### Fluxo principal
 
 1. O Administrador seleciona um usuário e solicita a remoção.
 2. O sistema localiza o usuário pelo identificador.
-3. O sistema remove e persiste o usuário.
-4. O sistema confirma a remoção e atualiza a listagem e a contagem de usuários.
+3. O sistema remove e persiste a alteração no repositório.
+4. Se houver um desfazimento pendente associado ao usuário removido, o sistema descarta esse histórico.
+5. O sistema confirma a remoção e atualiza a listagem e a contagem de usuários.
 
 ### Fluxos alternativos e de exceção
 
 - **2a. Usuário inexistente:** o sistema informa "Usuário com ID '<id>' não encontrado." e não altera o repositório.
-- **3a. Falha de persistência:** o sistema informa a falha e preserva o arquivo e o estado em memória anteriores à operação.
+- **3a. Falha de persistência:** o sistema informa a falha e preserva o arquivo, o estado em memória e eventual histórico de desfazimento anteriores à operação.
 
 ## UC23 — Desfazer Atualização de Usuário
 
@@ -120,26 +121,25 @@ Requisito relacionado: RF18, especificado em [usuários](../../openspec/specs/us
 |---|---|
 | Ator principal | Administrador |
 | Objetivo | Desfazer a atualização de usuário concluída com sucesso mais recentemente durante a execução atual. |
-| Precondições | O Administrador solicita o desfazimento durante a execução atual do sistema. |
-| Pós-condições | O estado imediatamente anterior à atualização é restaurado e persistido. O identificador, o perfil e os dados específicos do perfil são preservados. A única atualização disponível para desfazer é consumida. |
+| Precondições | O Administrador está autenticado e a sessão de execução atual do sistema está ativa. |
+| Pós-condições | O estado imediatamente anterior à última atualização válida é restaurado e persistido. O identificador, o perfil e os dados específicos do perfil são preservados, e a senha permanece armazenada somente como hash. A única atualização disponível para desfazer é consumida. |
 
 ### Fluxo principal
 
 1. O Administrador solicita o desfazimento da última atualização de usuário.
-2. O sistema obtém a atualização concluída com sucesso mais recentemente.
+2. O sistema obtém a atualização concluída com sucesso mais recentemente na execução atual.
 3. O sistema restaura o estado anterior desse usuário.
 4. O estado restaurado é persistido pelo repositório.
 5. O sistema descarta a ação disponível para desfazer.
-6. O sistema confirma o sucesso da operação.
+6. O sistema confirma o sucesso da operação, sem exibir a senha nem seu hash, conforme [NF-SEG-01](../../openspec/specs/rnf/seguranca/spec.md).
 
-### Fluxos alternativos e adicionais
+### Fluxos alternativos e de exceção
 
-- **2a. Não existe atualização disponível:** o sistema informa "Aviso: Não há atualização disponível para desfazer." e não altera usuários.
-- **4a. Falha ao persistir a restauração:** o sistema informa a falha, mantém o estado atualizado e mantém a ação disponível para nova tentativa.
-- **Remoção do usuário atualizado:** o sistema descarta o desfazimento desse usuário; uma solicitação posterior não o restaura.
-- **Desfazer após duas atualizações:** se duas atualizações forem concluídas, o desfazimento restaura apenas o estado imediatamente anterior à segunda atualização.
-- **Atualização inválida após uma atualização válida:** a atualização inválida não é concluída e o histórico válido continua disponível para desfazer.
-- **Nova solicitação após o desfazimento:** como o histórico foi consumido, uma nova solicitação não desfaz nenhuma atualização.
+- **2a. Não existe atualização disponível (ou histórico já consumido):** o sistema informa "Aviso: Não há atualização disponível para desfazer." e não altera usuários.
+- **2b. Usuário atualizado foi removido posteriormente (UC21):** como a remoção descarta o histórico desse usuário, o sistema trata o cenário como ausência de atualização disponível (fluxo 2a) e não recria o usuário.
+- **2c. Múltiplas atualizações concluídas em sequência:** se duas ou mais atualizações válidas forem concluídas, o sistema mantém apenas a mais recente e restaura o estado imediatamente anterior a ela.
+- **2d. Atualização inválida após uma atualização válida:** como a atualização inválida é recusada no UC08 (fluxo 5a), o histórico da última atualização válida permanece disponível para desfazimento.
+- **4a. Falha ao persistir a restauração:** o sistema informa a falha, mantém o estado atualizado no repositório e preserva a ação disponível para nova tentativa.
 
 ## UC12 — Cadastrar Restaurante
 

@@ -16,7 +16,8 @@ Regras de comunicação respeitadas: **Ator ↔ Fronteira ↔ Controle ↔ Entid
 
 Cobre o CRUD das duas entidades implementadas até a Sprint 3, incluindo o
 cadastro de usuário por Administrador ou Estudante, a gestão de usuários e
-restaurantes, e a contagem consolidada. A `FacadeSingletonController` é o
+restaurantes, a contagem consolidada e a reversão (desfazer) da última
+atualização de usuário entregue na Sprint 5. A `FacadeSingletonController` é o
 ponto de entrada único para os controladores; os repositórios podem usar
 implementações em memória ou em arquivo.
 
@@ -47,6 +48,7 @@ classDiagram
         +consultar(usuarioId: int)
         +exibirUsuario(usuario: Usuario)
         +editar(usuarioId: int, dados: DadosUsuario)
+        +desfazerUltimaAtualizacao()
         +remover(usuarioId: int)
         +exibirResultado(mensagem: String)
         +exibirErros(erros: List~String~)
@@ -70,6 +72,7 @@ classDiagram
         +listar_usuarios() List~Usuario~
         +buscar_usuario(usuario_id: int) Usuario
         +atualizar_usuario(usuario_id: int, dados: DadosUsuario) Usuario
+        +desfazer_ultima_atualizacao_usuario() boolean
         +remover_usuario(usuario_id: int)
         +cadastrar_restaurante(dados: DadosRestaurante) Restaurante
         +buscar_restaurante(restaurante_id: int) Restaurante
@@ -174,7 +177,7 @@ classDiagram
 
     TelaCadastroUsuario --> FacadeSingletonController : solicita cadastro
     TelaListagemUsuarios --> FacadeSingletonController : solicita listagem
-    TelaGerenciamentoUsuario --> FacadeSingletonController : consulta / edita / remove
+    TelaGerenciamentoUsuario --> FacadeSingletonController : consulta / edita / desfaz / remove
     TelaGerenciamentoRestaurante --> FacadeSingletonController : CRUD
     FacadeSingletonController --> FacadeSingletonController : instância única
     FacadeSingletonController --> ControladorUsuario : delega
@@ -297,6 +300,35 @@ sequenceDiagram
         C->>R: remover(usuarioId)
         R-->>C: removido
         C-->>T: resultado
+    end
+```
+
+### Colaboração: Desfazer última atualização de usuário
+
+Diferente dos diagramas anteriores, este fluxo inclui a
+`FacadeSingletonController` porque é ela quem mantém a referência da última
+atualização desfazível; os detalhes internos dos padrões aplicados
+(*Command* e *Memento*) estão documentados em [08-projeto.md](08-projeto.md).
+
+```mermaid
+%%{init: {"flowchart": {"useMaxWidth": false}, "class": {"useMaxWidth": false}, "sequence": {"useMaxWidth": false}, "state": {"useMaxWidth": false}}}%%
+sequenceDiagram
+    actor Admin as Administrador
+    participant T as TelaGerenciamentoUsuario
+    participant F as FacadeSingletonController
+    participant R as RepositorioUsuarios
+
+    Admin->>T: desfazerUltimaAtualizacao()
+    T->>F: desfazer_ultima_atualizacao_usuario()
+    alt existe atualização anterior registrada
+        F->>F: restaura estado anterior do usuário
+        F->>R: atualizar(usuarioAnterior)
+        R-->>F: usuário restaurado
+        F-->>T: true (sucesso)
+        T-->>Admin: exibirResultado("Última atualização revertida")
+    else sem histórico de atualização
+        F-->>T: false
+        T-->>Admin: exibirResultado("Nenhuma atualização recente para desfazer")
     end
 ```
 
