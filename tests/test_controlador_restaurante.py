@@ -11,7 +11,7 @@ from source.aplicacao.restaurantes import (
     ValidadorRestaurante,
 )
 from source.dominio.restaurantes import DadosRestaurante, StatusRestaurante
-from source.dominio.usuarios import GestorRestaurante
+from source.dominio.usuarios import DadosBasicosUsuario, GestorRestaurante
 from source.infraestrutura.persistencia.memoria import (
     RepositorioRestaurantesMemoria,
     RepositorioUsuariosMemoria,
@@ -178,11 +178,13 @@ def test_deve_impedir_remocao_de_restaurante_com_gestor_vinculado(
     assert restaurante.id is not None
     repositorio_usuarios.adicionar(
         GestorRestaurante(
-            nome="Gestor",
-            login="gestor",
-            email="gestor@example.com",
-            senha="hash",
-            telefone="83999990001",
+            DadosBasicosUsuario(
+                nome="Gestor",
+                login="gestor",
+                email="gestor@example.com",
+                senha="hash",
+                telefone="83999990001",
+            ),
             restaurante_id=restaurante.id,
         )
     )
@@ -201,11 +203,13 @@ def test_deve_remover_restaurante_se_gestor_estiver_vinculado_a_outro(
     assert restaurante.id is not None
     repositorio_usuarios.adicionar(
         GestorRestaurante(
-            nome="Gestor",
-            login="gestor",
-            email="gestor@example.com",
-            senha="hash",
-            telefone="83999990001",
+            DadosBasicosUsuario(
+                nome="Gestor",
+                login="gestor",
+                email="gestor@example.com",
+                senha="hash",
+                telefone="83999990001",
+            ),
             restaurante_id=999,
         )
     )

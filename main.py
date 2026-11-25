@@ -21,6 +21,9 @@ from source.infraestrutura.persistencia.fabrica_repositorios import (
 ARMAZENAMENTO_MEMORIA = "memoria"
 ARMAZENAMENTO_ARQUIVO = "arquivo"
 ARMAZENAMENTOS = (ARMAZENAMENTO_MEMORIA, ARMAZENAMENTO_ARQUIVO)
+AVISO_SEM_ATUALIZACAO_DESFAZIVEL = (
+    "Aviso: Não há atualização disponível para desfazer."
+)
 
 
 def ler_argumentos() -> argparse.Namespace:
@@ -227,15 +230,20 @@ def tentar_remover_usuario(fachada: FacadeSingletonController, usuario_id: int, 
 
 def tentar_desfazer_atualizacao_usuario(fachada: FacadeSingletonController, titulo: str, id_exibicao: int) -> None:
     print(f"{titulo}\n-----------------------------------------")
-    if fachada.desfazer_ultima_atualizacao_usuario():
-        print("Sucesso! A última atualização foi revertida pelo sistema.")
-        try:
-            usr_revertido = fachada.buscar_usuario(id_exibicao)
-            imprimir_detalhes_usuario(usr_revertido, titulo="\nEstado revertido (Depois):")
-        except ValueError:
-            pass
-    else:
-        print("Aviso: Não há nenhuma atualização recente armazenada para desfazer.")
+    try:
+        if fachada.desfazer_ultima_atualizacao_usuario():
+            print("Sucesso! A última atualização foi revertida pelo sistema.")
+            try:
+                usr_revertido = fachada.buscar_usuario(id_exibicao)
+                imprimir_detalhes_usuario(
+                    usr_revertido, titulo="\nEstado revertido (Depois):"
+                )
+            except ValueError:
+                pass
+        else:
+            print(AVISO_SEM_ATUALIZACAO_DESFAZIVEL)
+    except ErroPersistenciaBase as erro:
+        print(f"Falha de persistência: {erro}")
     print("-----------------------------------------\n")
 
 
@@ -426,10 +434,13 @@ def menu_interativo_usuarios(fachada: FacadeSingletonController) -> None:
 
         elif opcao == '6':
             print("Tentando desfazer a última atualização...")
-            if fachada.desfazer_ultima_atualizacao_usuario():
-                print("Sucesso! A última atualização foi revertida pelo sistema.")
-            else :
-                print("Aviso: Não há nenhuma atualização recente armazenada para desfazer.")
+            try:
+                if fachada.desfazer_ultima_atualizacao_usuario():
+                    print("Sucesso! A última atualização foi revertida pelo sistema.")
+                else:
+                    print(AVISO_SEM_ATUALIZACAO_DESFAZIVEL)
+            except ErroPersistenciaBase as erro:
+                print(f"Falha de persistência: {erro}")
 
         else:
             print("Opção inválida.")
