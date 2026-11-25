@@ -15,6 +15,7 @@ flowchart TB
 
     subgraph Aplicacao["Aplicação — source/aplicacao"]
         Facade["FacadeSingletonController<br/>Facade + Singleton"]
+        Comandos["Comando e ComandoAtualizarUsuario<br/>Command"]
         CUsuario["ControladorUsuario"]
         CRestaurante["ControladorRestaurante"]
         VUsuario["Validadores de usuário"]
@@ -25,6 +26,7 @@ flowchart TB
 
     subgraph Dominio["Domínio — source/dominio"]
         Usuario["Usuario e perfis"]
+        Memento["UsuarioMemento<br/>Memento"]
         Restaurante["Restaurante"]
         DadosRestaurante["DadosRestaurante"]
         Acesso["RegistroAcesso"]
@@ -48,9 +50,13 @@ flowchart TB
     Main --> Facade
     Main --> DadosRestaurante
     Main --> Erros
+    Facade --> Comandos
     Facade --> CUsuario
     Facade --> CRestaurante
     Facade --> Relatorios
+    Comandos --> CUsuario
+    Comandos --> RUsuarios
+    Comandos --> Memento
     Relatorios --> RAcessos
     Relatorios --> RUsuarios
     Relatorios --> Logger
@@ -64,6 +70,7 @@ flowchart TB
     VUsuario --> RUsuarios
     VUsuario --> RRestaurantes
     RUsuarios --> Usuario
+    Usuario -. cria / restaura .-> Memento
     RRestaurantes --> Restaurante
     Fabrica --> Memoria
     Fabrica --> Arquivo
@@ -80,8 +87,8 @@ flowchart TB
 | Módulo/camada | Responsabilidades | Dependências permitidas |
 |---|---|---|
 | `main.py` | Ler opções de execução, escolher a fábrica concreta de repositórios, criar o Adapter de logging, obter a fachada, construir dados de domínio usados no fluxo CLI e tratar exceções de domínio. | Aplicação, domínio e infraestrutura. |
-| Aplicação | Validar e coordenar casos de uso; a fachada constrói os controladores e o serviço de relatórios de acesso e os expõe; controladores aplicam regras de aplicação; define o contrato de logging. | Contratos e entidades do domínio. |
-| Domínio | Definir `Usuario`, perfis, `Restaurante`, `RegistroAcesso`, dados de domínio, exceções e contratos de repositório. | Biblioteca padrão e outros elementos do domínio. |
+| Aplicação | Validar e coordenar casos de uso; a fachada constrói os controladores e o serviço de relatórios de acesso, expõe as operações e atua como invocadora/zeladora do último comando desfazível; comandos encapsulam operações reversíveis; controladores aplicam regras de aplicação; define o contrato de logging. | Contratos e entidades do domínio. |
+| Domínio | Definir `Usuario`, perfis, `UsuarioMemento`, `Restaurante`, `RegistroAcesso`, dados de domínio, exceções e contratos de repositório. | Biblioteca padrão e outros elementos do domínio. |
 | Infraestrutura | Implementar repositórios em memória e em arquivo, as fábricas de repositórios e o Adapter de logging. | Contratos e entidades do domínio; contrato de logging da aplicação. |
 
 A camada de aplicação conhece os contratos de repositório e de logging, não as
@@ -111,13 +118,25 @@ e não podem substituí-los silenciosamente.
 - **Consulta:** a fachada encaminha `buscar_usuario(id)` ao controlador, que
   delega `buscar_por_id(id)` ao contrato `RepositorioUsuarios`. Um ID ausente
   é informado como usuário não encontrado.
-- **Atualização:** o controlador localiza o usuário, valida os dados com
+- **Atualização:** a fachada instancia e executa `ComandoAtualizarUsuario`, que
+  solicita um `UsuarioMemento` do estado atual antes de delegar a operação ao
+  controlador. O controlador localiza o usuário, valida os dados com
   `id_ignorado` para excluir o próprio registro das verificações de unicidade,
-  aplica os campos editáveis e delega a gravação ao repositório. O ID, o
-  perfil e os dados específicos do perfil permanecem inalterados.
+  aplica os campos editáveis e delega a gravação ao repositório. Concluída a
+  gravação, a fachada armazena o comando como a última atualização desfazível.
+  O ID, o perfil e os dados específicos do perfil permanecem inalterados.
+- **Desfazer atualização:** a fachada verifica se há um comando desfazível
+  armazenado em memória e chama `desfazer()`. O comando restaura o estado
+  anterior da entidade a partir do `UsuarioMemento`, solicita a gravação ao
+  `RepositorioUsuarios` e, após o sucesso da persistência, a fachada descarta
+  o histórico consumido. Os detalhes de projeto estão em
+  [08-projeto.md](../08-projeto.md) e na
+  [ADR-0012](./adr/0012-command-e-memento-para-desfazer.md).
 - **Remoção:** o controlador confirma a existência do ID antes de solicitar
   `remover(id)` ao repositório. No armazenamento em arquivo, a alteração é
-  gravada antes de a operação ser considerada concluída.
+  gravada antes de a operação ser considerada concluída. Se o usuário removido
+  corresponder à última atualização desfazível, a fachada descarta esse
+  histórico.
 
 As implementações em arquivo usam gravação atômica. Na atualização de usuário,
 o controlador altera uma cópia da entidade; se a gravação falhar, o repositório
