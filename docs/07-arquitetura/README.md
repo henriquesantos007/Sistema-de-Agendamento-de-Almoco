@@ -20,6 +20,9 @@ web, mas essa interface ainda não está implementada; os wireframes em
   decisão de isolar a biblioteca `logging` atrás de um Adapter.
 - [ADR-0011 — Template Method para relatórios de acesso](./adr/0011-template-method-para-relatorios-de-acesso.md):
   decisão de compartilhar o fluxo de geração dos relatórios HTML e CSV.
+- [ADR-0012 — Command e Memento para desfazer atualização](./adr/0012-command-e-memento-para-desfazer.md):
+  decisão de encapsular a atualização de usuário e preservar seu estado
+  anterior para permitir reverter a última alteração.
 
 O diagrama de classes de projeto e os padrões estão em
 [08-projeto.md](../08-projeto.md).

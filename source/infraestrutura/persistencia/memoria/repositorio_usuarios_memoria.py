@@ -1,7 +1,7 @@
-import re
 from typing import List, Optional
 
 from source.dominio.usuarios.repositorio_usuarios import RepositorioUsuarios
+from source.dominio.usuarios.telefone import normalizar_telefone
 from source.dominio.usuarios.usuario import Estudante, Usuario
 
 
@@ -47,10 +47,13 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
         )
 
     def existe_telefone(self, telefone: str, id_ignorado: Optional[int] = None) -> bool:
-        telefone_normalizado = re.sub(r"\D", "", telefone)
+        telefone_normalizado = normalizar_telefone(telefone)
+        # Sem digitos, nao ha telefone a comparar (comportamento do validador).
+        if not telefone_normalizado:
+            return False
         return any(
             isinstance(usuario, Estudante)
-            and re.sub(r"\D", "", usuario.telefone) == telefone_normalizado
+            and normalizar_telefone(usuario.telefone) == telefone_normalizado
             and usuario.id != id_ignorado
             for usuario in self._usuarios
         )
